@@ -498,7 +498,7 @@ async function fetchVault(){
     text.trim().split('\n').forEach(line => {
       try {
         const ev = JSON.parse(line);
-        if (ev.type === 'message' && ev.message) {
+        if ((ev.event || ev.type) === 'message' && ev.message) {
           const m = JSON.parse(ev.message);
           if (m.kind === 'loan' && typeof m.delta === 'number') v -= m.delta;
         }
@@ -608,7 +608,7 @@ async function fetchTransfers(myNum){
   text.trim().split('\n').forEach(line => {
     try {
       const ev = JSON.parse(line);
-      if (ev.type === 'message' && ev.message) {
+      if ((ev.event || ev.type) === 'message' && ev.message) {
         const t = JSON.parse(ev.message);
         if (t.to === myNum) out.push({ ...t, id: ev.id });
       }
@@ -625,7 +625,7 @@ async function fetchStatuses(myNum){
   text.trim().split('\n').forEach(line => {
     try {
       const ev = JSON.parse(line);
-      if (ev.type === 'message' && ev.message) {
+      if ((ev.event || ev.type) === 'message' && ev.message) {
         const t = JSON.parse(ev.message);
         if (t.kind === 'loan_status' && t.num === myNum) out.push({ ...t, id: ev.id });
       }

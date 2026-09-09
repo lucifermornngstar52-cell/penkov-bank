@@ -313,7 +313,7 @@ async function fetchNtfy(filter){
   text.trim().split('\n').forEach(line => {
     try {
       const ev = JSON.parse(line);
-      if (ev.type === 'message' && ev.message) {
+      if ((ev.event || ev.type) === 'message' && ev.message) {
         const t = JSON.parse(ev.message);
         if (filter(t)) out.push({ ...t, _id: ev.id, _ts: ev.time * 1000 });
       }
