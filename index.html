@@ -71,6 +71,9 @@ h1 .grad{background:linear-gradient(135deg,var(--p2),var(--p));-webkit-backgroun
 .bank-card .mc i:first-child{left:0;background:#ea1c2d}
 .bank-card .mc i:last-child{left:22px;background:#f79e1b;mix-blend-mode:hard-light}
 
+.bank-card.flat{transform:none;animation:none;width:min(340px,100%);box-shadow:0 14px 40px rgba(124,58,237,.25)}
+.tile.hot-tile{border-color:rgba(167,139,250,.55);box-shadow:0 0 44px rgba(124,58,237,.2)}
+
 /* sections */
 section{padding:90px 6vw;max-width:1200px;margin:0 auto}
 .sec-head{text-align:center;margin-bottom:56px}
@@ -273,17 +276,23 @@ footer .logo{justify-content:center;margin-bottom:14px}
     <div class="tile">
       <div class="ico" style="font-size:34px">💜</div>
       <h3>Violet</h3>
-      <p>Базовая карта для everyday: бесплатное обслуживание, кешбэк 5% на кафе и транспорт, переводы без комиссии.</p>
+      <p>Базовая карта для everyday: кешбэк 5% на кафе и транспорт, переводы без комиссии.</p>
+      <p style="color:var(--p2);font-weight:700;margin-bottom:0">Обслуживание — 0 ₸ навсегда</p>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:18px" onclick="openCardModal('violet')">Открыть карту</button>
     </div>
     <div class="tile">
       <div class="ico" style="font-size:34px">🌌</div>
       <h3>Nebula</h3>
       <p>Для тех, кто живёт на полную: кешбэк 10% на всё, приоритетная поддержка и бесплатное снятие в любых банкоматах мира.</p>
+      <p style="color:var(--p2);font-weight:700;margin-bottom:0">Обслуживание — 0 ₸ навсегда</p>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:18px" onclick="openCardModal('nebula')">Открыть карту</button>
     </div>
-    <div class="tile">
+    <div class="tile hot-tile">
       <div class="ico" style="font-size:34px">🖤</div>
       <h3>Obsidian</h3>
       <p>Чёрная карта для избранных: персональный менеджер, кешбэк 15%, доступ в бизнес-залы и металлический корпус карты.</p>
+      <p style="color:var(--p2);font-weight:700;margin-bottom:0">Обслуживание — 0 ₸ навсегда</p>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:18px" onclick="openCardModal('obsidian')">Открыть карту</button>
     </div>
   </div>
 </section>
@@ -319,7 +328,7 @@ footer .logo{justify-content:center;margin-bottom:14px}
 <section id="tariffs">
   <div class="sec-head">
     <h2>Тарифы</h2>
-    <p>Честно и прозрачно. Что написано — то и платишь.</p>
+    <p>Все тарифы — бесплатно. Навсегда. Что написано — то и есть.</p>
   </div>
   <div class="grid g3">
     <div class="tariff">
@@ -337,8 +346,8 @@ footer .logo{justify-content:center;margin-bottom:14px}
     <div class="tariff hot">
       <div class="ribbon">🔥 Выбор 87% клиентов</div>
       <h3>Премиум</h3>
-      <span style="color:var(--text2);font-size:13px">максимум за свои деньги</span>
-      <div class="price">990 ₸ <small>/ месяц</small></div>
+      <span style="color:var(--text2);font-size:13px">максимум — и бесплатно</span>
+      <div class="price">0 ₸ <small>/ месяц</small></div>
       <ul>
         <li>Кешбэк 12% на всё</li>
         <li>Накопительный счёт 16%</li>
@@ -350,7 +359,7 @@ footer .logo{justify-content:center;margin-bottom:14px}
     <div class="tariff">
       <h3>Obsidian</h3>
       <span style="color:var(--text2);font-size:13px">для тех, кто решает</span>
-      <div class="price">4 990 ₸ <small>/ месяц</small></div>
+      <div class="price">0 ₸ <small>/ месяц</small></div>
       <ul>
         <li>Кешбэк 15% без лимитов</li>
         <li>Персональный менеджер</li>
@@ -366,13 +375,13 @@ footer .logo{justify-content:center;margin-bottom:14px}
 <section id="account">
   <div class="sec-head">
     <h2>Личный кабинет</h2>
-    <p>Демо-счёт с демо-тенге: открой за 5 секунд и обмани систему (легально).</p>
+    <p>Счёт, карты и переводы — всё в одном месте. Открой за 5 секунд.</p>
   </div>
   <div id="noAccount" class="tile" style="text-align:center;padding:50px 30px">
     <div style="font-size:44px;margin-bottom:14px">🧾</div>
-    <h3 style="margin-bottom:8px">У тебя ещё нет демо-счёта</h3>
-    <p style="max-width:420px;margin:0 auto 24px">Открой счёт PenkovBank — получи номер и приветственный бонус 1 000 демо ₸. Реальными деньгами не является, гордостью — да.</p>
-    <button class="btn btn-primary btn-lg" onclick="openAccountModal()">🚀 Открыть демо счёт</button>
+    <h3 style="margin-bottom:8px">У тебя ещё нет счёта</h3>
+    <p style="max-width:420px;margin:0 auto 24px">Открой счёт PenkovBank — получи номер, карту и приветственный бонус 1 000 ₸.</p>
+    <button class="btn btn-primary btn-lg" onclick="openAccountModal()">🚀 Открыть счёт</button>
   </div>
   <div id="cabinet" style="display:none"></div>
 </section>
@@ -383,7 +392,7 @@ footer .logo{justify-content:center;margin-bottom:14px}
   </div>
   <details>
     <summary>Это настоящий банк?</summary>
-    <p>Это демонстрационный сайт в портфолио Penkov Digital. Выглядит как банк, пахнет как банк, но лицензию ЦБ пока не получил — работаем над этим 😉</p>
+    <p>PenkovBank — цифровой банк без единого филиала. Весь банк — это код, поэтому кешбэк выше, а комиссии — ноль.</p>
   </details>
   <details>
     <summary>Почему кешбэк 15%? Так не бывает</summary>
@@ -408,28 +417,46 @@ footer .logo{justify-content:center;margin-bottom:14px}
 <footer>
   <div class="logo"><span class="logo-badge">П</span>PenkovBank</div>
   <div>© 2026 PenkovBank. Сделано с 💜 и без единого филиала.</div>
-  <div style="margin-top:6px;opacity:.6">Демонстрационный проект. Банковская лицензия — дело времени.</div>
 </footer>
 
 <div class="loan-overlay" id="acctOverlay" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="loan-box">
     <button class="loan-close" onclick="document.getElementById('acctOverlay').classList.remove('active')">×</button>
-    <h3>Открыть демо счёт</h3>
-    <div class="sub">30 секунд — и ты клиент PenkovBank (демо)</div>
+    <h3>Открыть счёт</h3>
+    <div class="sub">30 секунд — и ты клиент PenkovBank</div>
     <label>Твоё имя</label>
     <input type="text" id="acName" placeholder="Как тебя зовут?">
     <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:22px" onclick="createAccount()">Открыть счёт</button>
   </div>
 </div>
 
+<div class="loan-overlay" id="cardOverlay" onclick="if(event.target===this)closeCardOverlay()">
+  <div class="loan-box">
+    <button class="loan-close" onclick="closeCardOverlay()">×</button>
+    <div id="cardFormWrap">
+      <h3 id="cardTitle"></h3>
+      <div class="sub" id="cardSub"></div>
+      <label>Имя и фамилия (как на карте)</label>
+      <input type="text" id="cardName" placeholder="IVAN PETROV" style="text-transform:uppercase;letter-spacing:1px">
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:22px" onclick="issueCard()">💳 Выпустить карту</button>
+    </div>
+    <div class="loan-ok" id="cardOk" style="display:none">
+      <div class="big">💳</div>
+      <h4>Карта выпущена!</h4>
+      <p id="cardOkText"></p>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:18px" onclick="closeCardOverlay();document.getElementById('account').scrollIntoView({behavior:'smooth'})">Отлично!</button>
+    </div>
+  </div>
+</div>
+
 <div class="loan-overlay" id="trOverlay" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="loan-box">
     <button class="loan-close" onclick="document.getElementById('trOverlay').classList.remove('active')">×</button>
-    <h3>💸 Перевод демо-тенге</h3>
+    <h3>💸 Перевод</h3>
     <div class="sub">Деньги уйдут со твоего счёта на счёт получателя. Пусть он нажмёт «Обновить баланс».</div>
     <label>Номер счёта получателя</label>
     <input type="text" id="trTo" placeholder="PB-123456789012" style="letter-spacing:1px">
-    <label>Сумма, демо ₸</label>
+    <label>Сумма, ₸</label>
     <input type="number" id="trSum" placeholder="Например: 5000" min="1">
     <label>Комментарий (необязательно)</label>
     <input type="text" id="trNote" placeholder="За улицу Пушкина 😎">
@@ -455,11 +482,61 @@ footer .logo{justify-content:center;margin-bottom:14px}
 </div>
 
 <script>
+const PLANS = {'Старт':'start','Премиум':'premium','Obsidian':'obsidian'};
+const PLAN_NAMES = {start:'Старт', premium:'Премиум', obsidian:'Obsidian'};
+const CARD_META = {violet:{t:'Violet',e:'💜',p:'start'},nebula:{t:'Nebula',e:'🌌',p:'premium'},obsidian:{t:'Obsidian',e:'🖤',p:'obsidian'}};
+let pendingPlan = null, cardMode = 'obsidian';
+
 function pick(t){
-  const b=event.target; b.textContent='✅ ' + t + ' — заявка принята!';
-  b.disabled=true; b.style.opacity=.85;
-  setTimeout(()=>{b.textContent='Спасибо! Мы на связи 🚀';},1800);
+  let a = getAcct();
+  if (!a) { pendingPlan = t; openAccountModal(); return; }
+  a.plan = PLANS[t];
+  saveAcct(a); renderCabinet();
+  const b = event.target;
+  b.textContent = '✅ Тариф «' + t + '» активирован';
+  b.disabled = true; b.style.opacity = .85;
+  document.getElementById('account').scrollIntoView({behavior:'smooth'});
 }
+
+function openCardModal(t){
+  cardMode = t;
+  const m = CARD_META[t];
+  document.getElementById('cardTitle').innerHTML = m.e + ' Карта ' + m.t;
+  document.getElementById('cardSub').textContent = 'Виртуальная карта: выпуск мгновенный, обслуживание 0 ₸. Тариф «' + PLAN_NAMES[m.p] + '» подключится автоматически.';
+  const a = getAcct();
+  document.getElementById('cardName').value = a ? (a.name || '') : '';
+  document.getElementById('cardFormWrap').style.display = 'block';
+  document.getElementById('cardOk').style.display = 'none';
+  document.getElementById('cardOverlay').classList.add('active');
+}
+
+function issueCard(){
+  const nm = document.getElementById('cardName').value.trim();
+  if (!nm) { alert('Введи имя, которое будет на карте 🙂'); return; }
+  const m = CARD_META[cardMode];
+  const g = () => String(Math.floor(1000 + Math.random() * 9000));
+  const num = '5300 ' + g() + ' ' + g() + ' ' + g();
+  const now = new Date();
+  const exp = String(now.getMonth() + 1).padStart(2,'0') + '/' + String((now.getFullYear() + 5) % 100).padStart(2,'0');
+  const cvv = String(Math.floor(100 + Math.random() * 900));
+  let a = getAcct();
+  if (!a) {
+    a = { num: 'PB-' + String(Math.floor(100000000000 + Math.random() * 899999999999)),
+          name: nm, balance: 1000, claimed: [], cards: [],
+          history: [{ op: 'Приветственный бонус', sum: 1000, date: Date.now() }] };
+  }
+  a.cards = a.cards || [];
+  a.cards.push({ type: cardMode, num, holder: nm.toUpperCase(), exp, cvv });
+  a.plan = m.p;
+  a.history.push({ op: m.e + ' Карта ' + m.t + ' выпущена', sum: 0, date: Date.now() });
+  saveAcct(a);
+  document.getElementById('cardFormWrap').style.display = 'none';
+  document.getElementById('cardOk').style.display = 'block';
+  document.getElementById('cardOkText').innerHTML = 'Карта <b>' + m.t + '</b> уже в кабинете — держи её под рукой 💳<br>Номер: <b>' + num + '</b><br>Срок: <b>' + exp + '</b> · CVV: <b>' + cvv + '</b>';
+  renderCabinet();
+}
+
+function closeCardOverlay(){ document.getElementById('cardOverlay').classList.remove('active'); }
 // ===== DEMO ACCOUNTS =====
 const GH_API = 'https://api.github.com/repos/lucifermornngstar52-cell/penkov-bank/contents/credits.json';
 const getAcct = () => JSON.parse(localStorage.getItem('pb_account') || 'null');
@@ -471,16 +548,17 @@ function createAccount(){
   const name = document.getElementById('acName').value.trim();
   if (!name) { alert('Введи имя 🙂'); return; }
   const num = 'PB-' + String(Math.floor(100000000000 + Math.random() * 899999999999));
-  saveAcct({ num, name, balance: 1000, claimed: [], history: [
+  saveAcct({ num, name, balance: 1000, claimed: [], cards: [], plan: pendingPlan ? PLANS[pendingPlan] : 'start', history: [
     { op: 'Приветственный бонус', sum: 1000, date: Date.now() }
   ]});
+  pendingPlan = null;
   document.getElementById('acctOverlay').classList.remove('active');
   renderCabinet();
   document.getElementById('account').scrollIntoView({behavior:'smooth'});
 }
 
 // ===== ХРАНИЛИЩЕ БАНКА (общее для всех игроков) =====
-const VAULT_START = 10000000000000; // 10 трлн демо ₸
+const VAULT_START = 10000000000000; // 10 трлн ₸
 
 function fmtBig(n){
   const a = Math.abs(n);
@@ -525,6 +603,24 @@ function renderCabinet(){
     return `<div class="op-row"><span>${h.op}</span>
      <span><time>${new Date(h.date).toLocaleDateString('ru')} ${new Date(h.date).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})}</time> <b class="${neg?'minus':'plus'}">${neg?'−':'+'}${new Intl.NumberFormat('ru-RU').format(Math.abs(h.sum))} ₸</b></span></div>`;
   }).join('');
+  const planNm = PLAN_NAMES[a.plan || 'start'];
+  const cardsHtml = (a.cards || []).map(k => {
+    const m = CARD_META[k.type] || CARD_META.obsidian;
+    const last4 = k.num.slice(-4);
+    return `<div style="text-align:center;margin-bottom:8px">
+      <div class="bank-card flat" style="margin:0 auto 10px">
+        <div class="chip"></div>
+        <div class="brand">PENKOV<span style="color:var(--text2)">BANK</span></div>
+        <div class="num">5300 •••• •••• ${last4}</div>
+        <div class="row">
+          <div class="holder">Владелец<b>${k.holder}</b></div>
+          <div class="valid">Срок<b>${k.exp}</b></div>
+        </div>
+        <div class="mc"><i></i><i></i></div>
+      </div>
+      <p style="font-size:12.5px;color:var(--text2)">${m.e} ${m.t} · реквизиты: <b style="color:var(--text1)">${k.num}</b> · до ${k.exp} · CVV ${k.cvv}</p>
+    </div>`;
+  }).join('');
   const loansHtml = (a.loans || []).map(l => l.status === 'pending'
     ? `<div class="op-row"><span>${l.type === 'mortgage' ? '🏠 Ипотека' : '💰 Кредит'} · ${fmt(l.sum)} ₸</span>
        <span><b style="color:var(--p2)">⏳ на рассмотрении</b></span></div>`
@@ -533,7 +629,7 @@ function renderCabinet(){
   document.getElementById('cabinet').innerHTML = `
     <div class="acct-card">
       <div class="acct-top">
-        <div class="acct-num">Демо-счёт<b>${a.num}</b><span style="font-size:12px;color:var(--text2)">Владелец: ${a.name}</span><span id="vaultVal" style="display:block;margin-top:6px;font-size:12px">🏦 Хранилище банка: …</span></div>
+        <div class="acct-num">Счёт<b>${a.num}</b><span style="font-size:12px;color:var(--text2)">Владелец: ${a.name}</span><span style="display:inline-block;margin-top:6px;font-size:11.5px;padding:3px 10px;border:1px solid rgba(167,139,250,.4);border-radius:99px;color:var(--p2)">Тариф «${planNm}»</span><span id="vaultVal" style="display:block;margin-top:6px;font-size:12px">🏦 Хранилище банка: …</span></div>
         <div class="acct-bal"><span>Баланс</span><b>${new Intl.NumberFormat('ru-RU').format(a.balance)} ₸</b></div>
       </div>
       <div class="acct-actions">
@@ -543,6 +639,11 @@ function renderCabinet(){
         <button class="btn btn-ghost" onclick="closeAccountForever()">🗑 Закрыть счёт</button>
       </div>
     </div>
+    ${(a.cards || []).length ? `<div class="tile" style="padding:24px 26px">
+      <h3 style="font-size:15px;margin-bottom:14px">💳 Мои карты</h3>
+      ${cardsHtml}
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:10px" onclick="location.hash='#cards'">Выпустить ещё одну</button>
+    </div>` : ''}
     ${(a.loans || []).length ? `<div class="tile" style="padding:24px 26px;border-color:rgba(239,68,68,.3)">
       <h3 style="font-size:15px;margin-bottom:6px">💳 Активные кредиты</h3>
       ${loansHtml}
@@ -557,7 +658,7 @@ function renderCabinet(){
 
 function copyNum(){
   navigator.clipboard.writeText(getAcct().num);
-  alert('Номер скопирован: ' + getAcct().num + ' — отправь его Никите для начисления демо-тенге 😎');
+  alert('Номер скопирован: ' + getAcct().num + ' — отправь его тому, кто должен тебе перевод 😎');
 }
 
 async function fetchCredits(){
@@ -581,7 +682,7 @@ async function sendTransfer(){
   if (!/^PB-\d{12}$/.test(to)) { msg.textContent = 'Номер счёта должен быть вида PB-123456789012'; msg.style.color = '#f87171'; return; }
   if (to === a.num) { msg.textContent = 'Себе переводить не надо 😄'; msg.style.color = '#f87171'; return; }
   if (!sum || sum <= 0) { msg.textContent = 'Введи сумму'; msg.style.color = '#f87171'; return; }
-  if (sum > a.balance) { msg.textContent = 'Недостаточно демо-тенге: на счету ' + new Intl.NumberFormat('ru-RU').format(a.balance) + ' ₸'; msg.style.color = '#f87171'; return; }
+  if (sum > a.balance) { msg.textContent = 'Недостаточно средств: на счету ' + new Intl.NumberFormat('ru-RU').format(a.balance) + ' ₸'; msg.style.color = '#f87171'; return; }
   msg.textContent = '⏳ Отправляем...'; msg.style.color = 'var(--text2)';
   try {
     const r = await fetch('https://ntfy.sh/' + NTFY_TR, { method: 'POST', body: JSON.stringify({
@@ -591,7 +692,7 @@ async function sendTransfer(){
     a.balance -= sum;
     a.history.push({ op: 'Перевод на ' + to + (note ? ' («' + note + '»)':''), sum: -sum, date: Date.now() });
     saveAcct(a); renderCabinet();
-    msg.innerHTML = '✅ Отправлено <b>' + new Intl.NumberFormat('ru-RU').format(sum) + ' демо ₸</b> на ' + to +
+    msg.innerHTML = '✅ Отправлено <b>' + new Intl.NumberFormat('ru-RU').format(sum) + ' ₸</b> на ' + to +
       '. Скажи получателю нажать «Обновить баланс».';
     msg.style.color = 'var(--ok)';
   } catch(e) {
@@ -661,8 +762,8 @@ async function refreshBalance(){
         const pend = (a.loans || []).find(l => l.status === 'pending' && l.requestId === c.loan.requestId);
         if (pend) { pend.status = 'active'; pend.debt = c.loan.debt || pend.debt; pend.payment = c.loan.payment || pend.payment;
           a.history.push({ op: (pend.type === 'mortgage' ? '🏠 Ипотека одобрена' : '💰 Кредит одобрен') + ' 🎉 на ' + pend.term + ' пл.', sum: c.sum, date: Date.now() });
-        } else a.history.push({ op: 'Начисление от PenkovBank: «' + (c.note || 'демо-кредит') + '»', sum: c.sum, date: Date.now() });
-      } else a.history.push({ op: 'Начисление от PenkovBank: «' + (c.note || 'демо-кредит') + '»', sum: c.sum, date: Date.now() });
+        } else a.history.push({ op: 'Начисление от PenkovBank: «' + (c.note || 'начисление') + '»', sum: c.sum, date: Date.now() });
+      } else a.history.push({ op: 'Начисление от PenkovBank: «' + (c.note || 'начисление') + '»', sum: c.sum, date: Date.now() });
     });
     if (fresh.length) parts.push('начисления банка: ' + fresh.reduce((s,c)=>s+c.sum,0) + ' ₸');
     freshTr.forEach(t => { total += t.sum; a.claimedTr.push(t.id);
@@ -672,12 +773,12 @@ async function refreshBalance(){
     if (rejected.length) parts.push('отклонено заявок: ' + rejected.length + ' 😔');
     rejected.forEach(l => a.history.push({ op: 'Заявка на ' + (l.type === 'mortgage' ? 'ипотеку' : 'кредит') + ' отклонена', sum: 0, date: Date.now() }));
     saveAcct(a); renderCabinet();
-    alert((total > 0 ? '🎉 Получено ' + new Intl.NumberFormat('ru-RU').format(total) + ' демо ₸!\n(' : '📬 Обновлено.\n(') + parts.join(' + ') + ')');
+    alert((total > 0 ? '🎉 Получено ' + new Intl.NumberFormat('ru-RU').format(total) + ' ₸!\n(' : '📬 Обновлено.\n(') + parts.join(' + ') + ')');
   } catch(e) { alert('Ошибка соединения: ' + e.message); }
 }
 
 function closeAccountForever(){
-  if (!confirm('Закрыть демо-счёт? Баланс сгорит в демо-пламени.')) return;
+  if (!confirm('Закрыть счёт? Баланс сгорает безвозвратно.')) return;
   localStorage.removeItem('pb_account');
   renderCabinet();
 }
@@ -702,7 +803,7 @@ function openLoan(mode){
     const acc = getAcct();
     const loans = acc ? (acc.loans || []) : [];
     if (!acc) {
-      F.innerHTML = '<p style="color:var(--text2);font-size:14px">Сначала открой демо счёт в разделе «Личный кабинет» 🙂</p>';
+      F.innerHTML = '<p style="color:var(--text2);font-size:14px">Сначала открой счёт в разделе «Личный кабинет» 🙂</p>';
     } else if (!loans.filter(l => l.status !== 'pending').length) {
       F.innerHTML = (loans.length
         ? '<p style="color:var(--text2);font-size:14px">Заявка ещё на рассмотрении в PenkovBank ⏳<br>Жди решения — кнопка «Обновить баланс».</p>'
@@ -751,7 +852,7 @@ function calcLoan(){
 async function applyLoan(){
   const acc = getAcct();
   if (!acc) {
-    alert('Сначала открой демо счёт в разделе «Личный кабинет» 🙂');
+    alert('Сначала открой счёт в разделе «Личный кабинет» 🙂');
     document.getElementById('loanOverlay').classList.remove('active');
     location.hash = '#account'; return;
   }
@@ -781,13 +882,13 @@ async function applyLoan(){
   fetch('https://ntfy.sh/' + NTFY_TR, { method: 'POST',
     body: JSON.stringify({ kind: 'loan_request', requestId, num: acc.num, name: acc.name, type: loanMode, sum, term, fee, date: Date.now() }) }).catch(() => {});
   showOk('Заявка отправлена! 📨',
-    (isMort ? 'Ипотека' : 'Кредит') + ' на <b>' + fmt(sum) + ' демо ₸</b> ушёл на рассмотрение в PenkovBank.<br>Решение придёт при нажатии «Обновить баланс» — обычно быстро. Пока заявка на рассмотрении, платежи не списываются.');
+    (isMort ? 'Ипотека' : 'Кредит') + ' на <b>' + fmt(sum) + ' ₸</b> ушёл на рассмотрение в PenkovBank.<br>Решение придёт при нажатии «Обновить баланс» — обычно быстро. Пока заявка на рассмотрении, платежи не списываются.');
 }
 function payLoan(i, mode){
   const acc = getAcct(); if (!acc) return;
   const l = (acc.loans || [])[i]; if (!l) return;
   const amount = mode === 'full' ? l.debt : Math.min(l.payment, l.debt);
-  if (acc.balance < amount) { alert('Недостаточно демо-тенге: нужно ' + fmt(amount) + ' ₸, на счету ' + fmt(acc.balance) + ' ₸'); return; }
+  if (acc.balance < amount) { alert('Недостаточно средств: нужно ' + fmt(amount) + ' ₸, на счету ' + fmt(acc.balance) + ' ₸'); return; }
   acc.balance -= amount;
   l.debt = Math.max(0, l.debt - amount);
   acc.history.push({ op: 'Платёж по ' + (l.type === 'mortgage' ? 'ипотеке' : 'кредиту') + (l.debt === 0 ? ' — ДОЛГ ЗАКРЫТ 🎉' : ''), sum: -amount, date: Date.now() });
