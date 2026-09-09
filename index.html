@@ -409,7 +409,6 @@ footer .logo{justify-content:center;margin-bottom:14px}
   <div class="logo"><span class="logo-badge">П</span>PenkovBank</div>
   <div>© 2026 PenkovBank. Сделано с 💜 и без единого филиала.</div>
   <div style="margin-top:6px;opacity:.6">Демонстрационный проект. Банковская лицензия — дело времени.</div>
-  <div class="admin-toggle" onclick="openAdminModal()">⚙︎ Панель разработчика</div>
 </footer>
 
 <div class="loan-overlay" id="acctOverlay" onclick="if(event.target===this)this.classList.remove('active')">
@@ -420,30 +419,6 @@ footer .logo{justify-content:center;margin-bottom:14px}
     <label>Твоё имя</label>
     <input type="text" id="acName" placeholder="Как тебя зовут?">
     <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:22px" onclick="createAccount()">Открыть счёт</button>
-  </div>
-</div>
-
-<div class="loan-overlay" id="adminOverlay" onclick="if(event.target===this)this.classList.remove('active')">
-  <div class="loan-box">
-    <button class="loan-close" onclick="document.getElementById('adminOverlay').classList.remove('active')">×</button>
-    <div id="adminLogin">
-      <h3>Панель разработчика</h3>
-      <div class="sub">Только для Никиты. Остальным — приятного просмотра.</div>
-      <label>Пароль</label>
-      <input type="password" id="adminPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')tryAdmin()">
-      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:22px" onclick="tryAdmin()">Войти</button>
-    </div>
-    <div id="adminPanel" style="display:none">
-      <h3>Начисление демо-тенге</h3>
-      <div class="sub">Введи номер счёта клиента и сумму — средства придут после «Обновить баланс» в кабинете.</div>
-      <div class="admin-row">
-        <input type="text" id="admNum" placeholder="PB-000000000000" style="letter-spacing:1px">
-        <input type="number" id="admSum" placeholder="Сумма, ₸" min="1">
-      </div>
-      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="creditAccount()">⚡ Начислить</button>
-      <p id="admMsg" style="font-size:13px;margin-top:12px;color:var(--text2)"></p>
-      <div id="admLog" style="margin-top:16px"></div>
-    </div>
   </div>
 </div>
 
@@ -550,8 +525,10 @@ function renderCabinet(){
     return `<div class="op-row"><span>${h.op}</span>
      <span><time>${new Date(h.date).toLocaleDateString('ru')} ${new Date(h.date).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})}</time> <b class="${neg?'minus':'plus'}">${neg?'−':'+'}${new Intl.NumberFormat('ru-RU').format(Math.abs(h.sum))} ₸</b></span></div>`;
   }).join('');
-  const loansHtml = (a.loans || []).map(l => `
-    <div class="op-row"><span>${l.type === 'mortgage' ? '🏠 Ипотека' : '💰 Кредит'} · ${fmt(l.sum)} ₸ · платёж ${fmt(l.payment)} ₸</span>
+  const loansHtml = (a.loans || []).map(l => l.status === 'pending'
+    ? `<div class="op-row"><span>${l.type === 'mortgage' ? '🏠 Ипотека' : '💰 Кредит'} · ${fmt(l.sum)} ₸</span>
+       <span><b style="color:var(--p2)">⏳ на рассмотрении</b></span></div>`
+    : `<div class="op-row"><span>${l.type === 'mortgage' ? '🏠 Ипотека' : '💰 Кредит'} · ${fmt(l.sum)} ₸ · платёж ${fmt(l.payment)} ₸</span>
       <span>осталось <b style="color:#f87171">${fmt(l.debt)} ₸</b></span></div>`).join('');
   document.getElementById('cabinet').innerHTML = `
     <div class="acct-card">
@@ -640,24 +617,62 @@ async function fetchTransfers(myNum){
   return out;
 }
 
+async function fetchStatuses(myNum){
+  const r = await fetch('https://ntfy.sh/' + NTFY_TR + '/json?poll=1');
+  if (!r.ok) return [];
+  const text = await r.text();
+  const out = [];
+  text.trim().split('\n').forEach(line => {
+    try {
+      const ev = JSON.parse(line);
+      if (ev.type === 'message' && ev.message) {
+        const t = JSON.parse(ev.message);
+        if (t.kind === 'loan_status' && t.num === myNum) out.push({ ...t, id: ev.id });
+      }
+    } catch(e) {}
+  });
+  return out;
+}
+
 async function refreshBalance(){
   try {
     const a = getAcct(); if (!a) return;
     if (!a.claimedTr) a.claimedTr = [];
-    const [creditsRes, transfers] = await Promise.all([fetchCredits(), fetchTransfers(a.num).catch(() => [])]);
+    if (!a.claimedSt) a.claimedSt = [];
+    const [creditsRes, transfers, statuses] = await Promise.all([
+      fetchCredits(), fetchTransfers(a.num).catch(() => []), fetchStatuses(a.num).catch(() => [])]);
     const fresh = creditsRes.credits.filter(c => c.num === a.num && !(a.claimed || []).includes(c.id));
     const freshTr = transfers.filter(t => !a.claimedTr.includes(t.id));
-    if (!fresh.length && !freshTr.length) { alert('Новых поступлений нет. Жми, когда кто-то отправит перевод 🙂'); return; }
+    const freshSt = statuses.filter(t => !a.claimedSt.includes(t.id));
+    // отклонённые заявки — снимаем pending
+    const rejected = [];
+    freshSt.forEach(t => {
+      a.claimedSt.push(t.id);
+      if (t.status === 'rejected' && (a.loans || []).length) {
+        const idx = a.loans.findIndex(l => l.status === 'pending' && l.requestId === t.requestId);
+        if (idx !== -1) { rejected.push(a.loans[idx]); a.loans.splice(idx, 1); }
+      }
+    });
+    if (!fresh.length && !freshTr.length && !rejected.length) { alert('Новых поступлений и решений нет. Жми, когда придёт перевод или решение по заявке 🙂'); return; }
     let total = 0, parts = [];
     fresh.forEach(c => { total += c.sum; a.claimed.push(c.id);
-      a.history.push({ op: 'Начисление от PenkovBank: «' + (c.note || 'демо-кредит') + '»', sum: c.sum, date: Date.now() }); });
+      // одобренный кредит/ипотека: активируем заявку по requestId
+      if (c.loan && c.loan.requestId) {
+        const pend = (a.loans || []).find(l => l.status === 'pending' && l.requestId === c.loan.requestId);
+        if (pend) { pend.status = 'active'; pend.debt = c.loan.debt || pend.debt; pend.payment = c.loan.payment || pend.payment;
+          a.history.push({ op: (pend.type === 'mortgage' ? '🏠 Ипотека одобрена' : '💰 Кредит одобрен') + ' 🎉 на ' + pend.term + ' пл.', sum: c.sum, date: Date.now() });
+        } else a.history.push({ op: 'Начисление от PenkovBank: «' + (c.note || 'демо-кредит') + '»', sum: c.sum, date: Date.now() });
+      } else a.history.push({ op: 'Начисление от PenkovBank: «' + (c.note || 'демо-кредит') + '»', sum: c.sum, date: Date.now() });
+    });
     if (fresh.length) parts.push('начисления банка: ' + fresh.reduce((s,c)=>s+c.sum,0) + ' ₸');
     freshTr.forEach(t => { total += t.sum; a.claimedTr.push(t.id);
       a.history.push({ op: 'Перевод от ' + t.fromName + ' (' + t.from + ')' + (t.note ? ' «' + t.note + '»':''), sum: t.sum, date: Date.now() }); });
     if (freshTr.length) parts.push('переводы: ' + freshTr.reduce((s,t)=>s+t.sum,0) + ' ₸');
     a.balance += total;
+    if (rejected.length) parts.push('отклонено заявок: ' + rejected.length + ' 😔');
+    rejected.forEach(l => a.history.push({ op: 'Заявка на ' + (l.type === 'mortgage' ? 'ипотеку' : 'кредит') + ' отклонена', sum: 0, date: Date.now() }));
     saveAcct(a); renderCabinet();
-    alert('🎉 Получено ' + new Intl.NumberFormat('ru-RU').format(total) + ' демо ₸!\n(' + parts.join(' + ') + ')');
+    alert((total > 0 ? '🎉 Получено ' + new Intl.NumberFormat('ru-RU').format(total) + ' демо ₸!\n(' : '📬 Обновлено.\n(') + parts.join(' + ') + ')');
   } catch(e) { alert('Ошибка соединения: ' + e.message); }
 }
 
@@ -667,59 +682,6 @@ function closeAccountForever(){
   renderCabinet();
 }
 
-// ===== ADMIN =====
-const ADMIN_PASS = 'penkov2026';
-function openAdminModal(){
-  document.getElementById('adminOverlay').classList.add('active');
-  const ok = sessionStorage.getItem('pb_admin') === '1';
-  document.getElementById('adminLogin').style.display = ok ? 'none' : 'block';
-  document.getElementById('adminPanel').style.display = ok ? 'block' : 'none';
-  if (ok) renderAdminLog();
-}
-function tryAdmin(){
-  if (document.getElementById('adminPass').value === ADMIN_PASS) {
-    sessionStorage.setItem('pb_admin', '1');
-    openAdminModal();
-  } else alert('Пароль неверный 😏');
-}
-async function renderAdminLog(){
-  try {
-    const { credits } = await fetchCredits();
-    document.getElementById('admLog').innerHTML = credits.slice(-10).reverse().map(c =>
-      `<div class="op-row"><span>${c.num} · <b>${new Intl.NumberFormat('ru-RU').format(c.sum)} ₸</b>${c.note ? ' · ' + c.note : ''}</span>
-       <time>${new Date(c.date).toLocaleDateString('ru')}</time></div>`).join('') || '<p style="color:var(--text2);font-size:13px">Начислений пока нет</p>';
-  } catch(e) {}
-}
-async function creditAccount(){
-  const num = document.getElementById('admNum').value.trim().toUpperCase();
-  const sum = +document.getElementById('admSum').value;
-  const msg = document.getElementById('admMsg');
-  if (!num || !sum || sum <= 0) { msg.textContent = 'Заполни номер счёта и сумму'; msg.style.color = '#f87171'; return; }
-  if (!num.startsWith('PB-')) { msg.textContent = 'Номер должен начинаться с PB-'; msg.style.color = '#f87171'; return; }
-  msg.textContent = '⏳ Отправляем...'; msg.style.color = 'var(--text2)';
-  try {
-    const token = prompt('Вставь GitHub token (fine-grained, с правами на penkov-bank):');
-    if (!token) { msg.textContent = 'Без токена не начислить'; msg.style.color = '#f87171'; return; }
-    const { sha, credits } = await fetchCredits();
-    const entry = { id: 'c' + Date.now(), num, sum, note: 'начисление', date: Date.now() };
-    credits.push(entry);
-    const put = await fetch(GH_API, {
-      method: 'PUT',
-      headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'credit ' + num + ' ' + sum + ' ₸',
-        content: btoa(unescape(encodeURIComponent(JSON.stringify({ credits }, null, 2)))), sha })
-    });
-    if (put.ok) {
-      msg.innerHTML = '✅ Начислено <b>' + new Intl.NumberFormat('ru-RU').format(sum) + ' демо ₸</b> на ' + num +
-        '. Клиент нажмёт «Обновить баланс» — и деньги придут.';
-      msg.style.color = 'var(--ok)';
-      document.getElementById('admNum').value = ''; document.getElementById('admSum').value = '';
-      renderAdminLog();
-    } else {
-      msg.textContent = 'GitHub отклонил: ' + put.status + ' (проверь токен)'; msg.style.color = '#f87171';
-    }
-  } catch(e) { msg.textContent = 'Ошибка: ' + e.message; msg.style.color = '#f87171'; }
-}
 
 renderCabinet();
 
@@ -741,10 +703,12 @@ function openLoan(mode){
     const loans = acc ? (acc.loans || []) : [];
     if (!acc) {
       F.innerHTML = '<p style="color:var(--text2);font-size:14px">Сначала открой демо счёт в разделе «Личный кабинет» 🙂</p>';
-    } else if (!loans.length) {
-      F.innerHTML = '<p style="color:var(--text2);font-size:14px">Активных кредитов нет — душа и баланс чисты 😌</p>';
+    } else if (!loans.filter(l => l.status !== 'pending').length) {
+      F.innerHTML = (loans.length
+        ? '<p style="color:var(--text2);font-size:14px">Заявка ещё на рассмотрении в PenkovBank ⏳<br>Жди решения — кнопка «Обновить баланс».</p>'
+        : '<p style="color:var(--text2);font-size:14px">Активных кредитов нет — душа и баланс чисты 😌</p>');
     } else {
-      F.innerHTML = loans.map((l, i) => `
+      F.innerHTML = loans.map((l, i) => l.status === 'pending' ? '' : `
         <div style="padding:14px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px">
           <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
             <b>${l.type === 'mortgage' ? '🏠 Ипотека' : '💰 Кредит'} · ${fmt(l.sum)} ₸</b>
@@ -810,14 +774,14 @@ async function applyLoan(){
   }
   const debt = Math.ceil(sum * (1 + fee));
   const payment = Math.ceil(debt / term);
-  acc.loans.push({ id: Date.now(), type: loanMode, sum, debt, payment, term, date: Date.now() });
-  acc.balance += sum;
-  acc.history.push({ op: (isMort ? '🏠 Ипотека выдана' : '💰 Кредит выдан') + ' на ' + term + ' пл.', sum, date: Date.now() });
+  const requestId = 'r' + Date.now() + Math.floor(Math.random() * 900 + 100);
+  acc.loans.push({ id: Date.now(), requestId, type: loanMode, sum, debt, payment, term, date: Date.now(), status: 'pending' });
+  acc.history.push({ op: (isMort ? '🏠 Заявка на ипотеку' : '💰 Заявка на кредит') + ' отправлена · ' + term + ' пл.', sum: 0, date: Date.now() });
   saveAcct(acc); renderCabinet();
-  fetch('https://ntfy.sh/' + NTFY_TR, { method: 'POST', body: JSON.stringify({ kind: 'loan', delta: sum }) }).catch(() => {});
-  showOk((isMort ? 'Ипотека' : 'Кредит') + ' одобрен! 🎉',
-    'На счёт зачислено <b>' + fmt(sum) + ' демо ₸</b>.<br>Вернуть: ' + fmt(debt) + ' ₸ (' + fmt(payment) + ' ₸ × ' + term +
-    ' платежей, комиссия ' + Math.round(fee*100) + '%).<br>Гасить — кнопкой «Оплатить кредит» в разделе «Кредиты».');
+  fetch('https://ntfy.sh/' + NTFY_TR, { method: 'POST',
+    body: JSON.stringify({ kind: 'loan_request', requestId, num: acc.num, name: acc.name, type: loanMode, sum, term, fee, date: Date.now() }) }).catch(() => {});
+  showOk('Заявка отправлена! 📨',
+    (isMort ? 'Ипотека' : 'Кредит') + ' на <b>' + fmt(sum) + ' демо ₸</b> ушёл на рассмотрение в PenkovBank.<br>Решение придёт при нажатии «Обновить баланс» — обычно быстро. Пока заявка на рассмотрении, платежи не списываются.');
 }
 function payLoan(i, mode){
   const acc = getAcct(); if (!acc) return;

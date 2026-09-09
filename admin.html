@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PenkovBank — Панель администратора</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%237c3aed'/><text x='50' y='70' font-size='58' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>П</text></svg>">
+<style><style>
+:root{
+  --bg:#0b0b12; --bg2:#12121c; --card:#161626; --line:rgba(124,58,237,.22);
+  --p:#7c3aed; --p2:#a78bfa; --text:#e8e8f0; --text2:#9a9ab0; --ok:#34d399; --gold:#fbbf24;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;
+  background-image:radial-gradient(rgba(124,58,237,.14) 1px,transparent 1px);background-size:26px 26px}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--p);color:#fff}
+
+/* nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 6vw;backdrop-filter:blur(16px);background:rgba(11,11,18,.72);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:.3px}
+.logo-badge{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,var(--p),#4c1d95);
+  display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;
+  box-shadow:0 0 24px rgba(124,58,237,.5)}
+.nav-links{display:flex;gap:28px;font-size:14px;color:var(--text2)}
+.nav-links a:hover{color:var(--p2)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:14px;border:none;cursor:pointer;
+  font-size:14px;font-weight:600;transition:.25s}
+.btn-primary{background:linear-gradient(135deg,var(--p),#6d28d9);color:#fff;box-shadow:0 4px 24px rgba(124,58,237,.35)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(124,58,237,.5)}
+.btn-ghost{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--line)}
+.btn-ghost:hover{border-color:var(--p)}
+.btn-lg{padding:16px 30px;font-size:16px;border-radius:16px}
+
+/* hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+  padding:120px 6vw 60px;position:relative}
+.glow{position:absolute;border-radius:50%;filter:blur(120px);opacity:.35;pointer-events:none}
+.glow-1{width:480px;height:480px;background:var(--p);top:-120px;left:8vw}
+.glow-2{width:380px;height:380px;background:#4c1d95;bottom:-80px;right:6vw}
+.tag{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:999px;font-size:13px;color:var(--p2);
+  background:rgba(124,58,237,.1);border:1px solid var(--line);margin-bottom:28px}
+.tag .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:clamp(42px,7vw,84px);font-weight:800;line-height:1.05;letter-spacing:-1.5px;max-width:900px}
+h1 .grad{background:linear-gradient(135deg,var(--p2),var(--p));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p.sub{color:var(--text2);font-size:clamp(15px,2vw,19px);max-width:560px;margin:26px 0 40px;line-height:1.6}
+.hero-cta{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.hero-note{margin-top:22px;font-size:13px;color:var(--text2)}
+
+/* bank card visual */
+.card-showcase{margin-top:70px;perspective:1200px}
+.bank-card{width:min(380px,80vw);aspect-ratio:1.586;border-radius:22px;padding:26px;position:relative;text-align:left;
+  background:linear-gradient(135deg,#241243,#0f0f1d 60%,#1c1140);border:1px solid rgba(167,139,250,.35);
+  box-shadow:0 24px 70px rgba(124,58,237,.4),inset 0 1px 0 rgba(255,255,255,.12);
+  transform:rotateX(12deg) rotateZ(-4deg);transition:.5s;animation:float 6s ease-in-out infinite}
+.card-showcase:hover .bank-card{transform:rotateX(0) rotateZ(0)}
+@keyframes float{0%,100%{translate:0 0}50%{translate:0 -14px}}
+.bank-card .chip{width:44px;height:34px;border-radius:8px;background:linear-gradient(135deg,#fde68a,#d97706);margin-bottom:auto}
+.bank-card .brand{position:absolute;top:26px;right:26px;font-weight:800;letter-spacing:2px;font-size:15px;color:var(--p2)}
+.bank-card .num{font-family:'Courier New',monospace;font-size:clamp(16px,4vw,21px);letter-spacing:3px;margin:38px 0 18px;color:#fff}
+.bank-card .row{display:flex;justify-content:space-between;align-items:flex-end}
+.bank-card .holder{font-size:12px;color:var(--text2)}
+.bank-card .holder b{display:block;font-size:15px;color:#fff;letter-spacing:1.5px;margin-top:4px;text-transform:uppercase}
+.bank-card .valid{font-size:12px;color:var(--text2);text-align:right}
+.bank-card .valid b{display:block;font-size:15px;color:#fff;margin-top:4px}
+.bank-card .mc{position:absolute;right:26px;bottom:26px;width:44px;height:44px}
+.bank-card .mc i{position:absolute;width:22px;height:22px;border-radius:50%;top:11px}
+.bank-card .mc i:first-child{left:0;background:#ea1c2d}
+.bank-card .mc i:last-child{left:22px;background:#f79e1b;mix-blend-mode:hard-light}
+
+/* sections */
+section{padding:90px 6vw;max-width:1200px;margin:0 auto}
+.sec-head{text-align:center;margin-bottom:56px}
+.sec-head h2{font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-1px}
+.sec-head p{color:var(--text2);margin-top:14px;font-size:16px}
+.grid{display:grid;gap:20px}
+.g3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+
+.tile{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:30px;transition:.3s;position:relative;overflow:hidden}
+.tile:hover{transform:translateY(-6px);border-color:rgba(167,139,250,.5);box-shadow:0 14px 44px rgba(124,58,237,.25)}
+.tile .ico{width:52px;height:52px;border-radius:15px;background:rgba(124,58,237,.14);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px}
+.tile h3{font-size:18px;margin-bottom:10px}
+.tile p{color:var(--text2);font-size:14px;line-height:1.6}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;padding:34px;border-radius:24px;
+  background:var(--card);border:1px solid var(--line)}
+.stat{text-align:center}
+.stat b{display:block;font-size:clamp(28px,3.6vw,42px);font-weight:800;background:linear-gradient(135deg,#fff,var(--p2));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.stat span{font-size:13px;color:var(--text2)}
+
+/* tariffs */
+.tariff{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:36px;display:flex;flex-direction:column}
+.tariff.hot{border-color:var(--p);box-shadow:0 0 50px rgba(124,58,237,.3);position:relative}
+.tariff .ribbon{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--p),#6d28d9);
+  padding:5px 16px;border-radius:999px;font-size:12px;font-weight:700;color:#fff}
+.tariff h3{font-size:20px;margin-bottom:6px}
+.tariff .price{font-size:38px;font-weight:800;margin:16px 0}
+.tariff .price small{font-size:14px;color:var(--text2);font-weight:400}
+.tariff ul{list-style:none;margin:20px 0 30px;flex:1}
+.tariff li{padding:9px 0;font-size:14px;color:var(--text2);display:flex;gap:10px;align-items:center}
+.tariff li::before{content:'✓';color:var(--ok);font-weight:700}
+.tariff .btn{justify-content:center}
+
+/* cabinet */
+.acct-card{background:linear-gradient(135deg,rgba(124,58,237,.16),rgba(76,29,149,.06));border:1px solid var(--line);
+  border-radius:24px;padding:30px;margin-bottom:20px}
+.acct-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;align-items:flex-start}
+.acct-num{font-size:13px;color:var(--text2)}
+.acct-num b{display:block;font-size:22px;letter-spacing:2px;color:#fff;margin-top:4px}
+.acct-bal{text-align:right}
+.acct-bal span{font-size:12px;color:var(--text2)}
+.acct-bal b{display:block;font-size:clamp(28px,5vw,42px);font-weight:800;
+  background:linear-gradient(135deg,#fff,var(--p2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.acct-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.op-row{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line);font-size:14px}
+.op-row:last-child{border-bottom:none}
+.op-row .plus{color:var(--ok);font-weight:700}
+.op-row .minus{color:#f87171;font-weight:700}
+.op-row time{color:var(--text2);font-size:12px}
+/* admin */
+.admin-toggle{cursor:pointer;opacity:.45;font-size:12px;margin-top:10px;transition:.2s}
+.admin-toggle:hover{opacity:1}
+.admin-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.admin-row input{flex:1;min-width:160px}
+
+/* faq */
+.faq details{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 24px;margin-bottom:12px;cursor:pointer}
+.faq summary{font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.faq summary::after{content:'+';font-size:22px;color:var(--p2);transition:.3s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{color:var(--text2);font-size:14px;line-height:1.65;margin-top:12px}
+
+/* cta band */
+.band{margin:40px auto 0;max-width:1200px;padding:60px 6vw;text-align:center;border-radius:28px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(76,29,149,.1));border:1px solid var(--line)}
+.band h2{font-size:clamp(26px,4vw,40px);font-weight:800}
+.band p{color:var(--text2);margin:14px 0 30px}
+
+footer{padding:40px 6vw 60px;text-align:center;color:var(--text2);font-size:13px;border-top:1px solid var(--line);margin-top:60px}
+footer .logo{justify-content:center;margin-bottom:14px}
+@media(max-width:640px){.nav-links{display:none}}
+
+/* loan modal */
+.loan-overlay{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px;
+  background:rgba(5,5,10,.75);backdrop-filter:blur(10px)}
+.loan-overlay.active{display:flex}
+.loan-box{width:min(460px,94vw);max-height:88vh;overflow-y:auto;background:var(--bg2);border:1px solid var(--line);
+  border-radius:24px;padding:30px;position:relative;box-shadow:0 30px 90px rgba(124,58,237,.35);
+  animation:pop .3s ease}
+@keyframes pop{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.loan-box h3{font-size:20px;margin-bottom:4px}
+.loan-box .sub{color:var(--text2);font-size:13px;margin-bottom:22px}
+.loan-close{position:absolute;top:16px;right:18px;background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer}
+.loan-close:hover{color:#fff}
+.loan-box label{display:block;font-size:12px;color:var(--text2);margin:14px 0 6px}
+.loan-box input[type=number],.loan-box input[type=text]{
+  width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 14px;
+  color:#fff;font-size:15px;outline:none}
+.loan-box input:focus{border-color:var(--p)}
+.loan-sum{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.loan-sum button{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  color:var(--text2);font-size:12px;cursor:pointer;transition:.2s}
+.loan-sum button:hover{border-color:var(--p);color:#fff}
+.loan-result{margin-top:20px;padding:18px;border-radius:16px;background:rgba(124,58,237,.1);border:1px solid var(--line);text-align:center}
+.loan-result b{display:block;font-size:28px;font-weight:800;color:var(--p2);margin-top:4px}
+.loan-result span{font-size:12px;color:var(--text2)}
+.loan-ok{display:none;text-align:center;padding:30px 10px}
+.loan-ok .big{font-size:52px;margin-bottom:12px}
+.loan-ok h4{font-size:19px;margin-bottom:8px}
+.loan-ok p{color:var(--text2);font-size:13px;line-height:1.6}
+</style>
+.login-wrap{max-width:440px;margin:12vh auto 0;padding:0 16px}
+.adm-badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--p2);border:1px solid var(--line);padding:6px 12px;border-radius:99px;margin-bottom:18px}
+.req-card{border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:12px;background:var(--bg2)}
+.req-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.req-meta{font-size:12.5px;color:var(--text2);margin-bottom:12px;line-height:1.6}
+.req-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn-approve{background:#16a34a!important;border:1px solid #16a34a!important}
+.btn-reject{background:transparent!important;color:#f87171!important;border:1px solid rgba(248,113,113,.4)!important}
+.st-pending{color:#fbbf24}.st-approved{color:#4ade80}.st-rejected{color:#f87171}
+.vault-line{font-size:13px;color:var(--text2);margin:10px 0 22px}
+.hidden{display:none!important}
+.logout{font-size:12px;color:var(--text2);cursor:pointer;text-decoration:underline}
+.logout:hover{color:#f87171}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand"><span class="nav-logo">П</span> PenkovBank <span style="font-size:12px;color:var(--p2);align-self:center">· Админ</span></div>
+  <div class="nav-links"><a href="index.html">← В банк</a></div>
+</nav>
+
+<!-- ВХОД: только токен владельца -->
+<div class="login-wrap" id="loginWrap">
+  <div class="adm-badge">🔐 Закрытая панель · только владелец</div>
+  <div class="tile" style="padding:26px">
+    <h3 style="font-size:18px;margin-bottom:6px">Панель администратора</h3>
+    <p style="color:var(--text2);font-size:14px;margin-bottom:18px">Доступ только по GitHub-токену с правами на репозиторий <code>penkov-bank</code>. Паролей нет — токен есть только у тебя.</p>
+    <label>GitHub token (fine-grained, Contents: Read &amp; Write на penkov-bank)</label>
+    <input type="password" id="admToken" placeholder="github_pat_…" onkeydown="if(event.key==='Enter')tryLogin()">
+    <p id="loginMsg" style="font-size:13px;margin-top:10px;color:var(--text2)"></p>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px" onclick="tryLogin()">Войти</button>
+  </div>
+</div>
+
+<!-- ПАНЕЛЬ -->
+<div id="panel" class="hidden">
+<section style="padding-top:110px">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <h2>🛡 Панель администратора</h2>
+    <span class="logout" onclick="logout()">Выйти</span>
+  </div>
+  <div class="vault-line" id="vaultVal">🏦 Хранилище банка: …</div>
+
+  <div class="tile" style="padding:24px 26px">
+    <h3 style="font-size:15px;margin-bottom:14px">📨 Заявки на кредиты и ипотеки</h3>
+    <div id="reqList"><p style="color:var(--text2);font-size:13px">Загружаем…</p></div>
+    <button class="btn btn-ghost" style="margin-top:14px" onclick="loadRequests()">🔄 Обновить</button>
+  </div>
+
+  <div class="tile" style="padding:24px 26px;margin-top:22px">
+    <h3 style="font-size:15px;margin-bottom:6px">⚡ Начисление демо-тенге вручную</h3>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:14px">Введи номер счёта клиента и сумму — средства придут после «Обновить баланс» в кабинете.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <input type="text" id="admNum" placeholder="PB-000000000000" style="letter-spacing:1px;flex:1;min-width:180px">
+      <input type="number" id="admSum" placeholder="Сумма, ₸" min="1" style="flex:1;min-width:120px">
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px" onclick="creditAccount()">⚡ Начислить</button>
+    <p id="admMsg" style="font-size:13px;margin-top:12px;color:var(--text2)"></p>
+  </div>
+
+  <div class="tile" style="padding:24px 26px;margin-top:22px">
+    <h3 style="font-size:15px;margin-bottom:14px">📜 Последние начисления</h3>
+    <div id="admLog"><p style="color:var(--text2);font-size:13px">Загружаем…</p></div>
+  </div>
+</section>
+</div>
+
+<script>
+// ===== КОНФИГ =====
+const GH_API = 'https://api.github.com/repos/lucifermornngstar52-cell/penkov-bank/contents/credits.json';
+const NTFY_TR = 'penkovbank-tr-9k4vxz';
+const VAULT_START = 10000000000000;
+const fmt = n => new Intl.NumberFormat('ru-RU').format(Math.round(n)) + ' ₸';
+const fmtBig = n => {
+  const a = Math.abs(n);
+  if (a >= 1e12) return (n/1e12).toLocaleString('ru-RU', {maximumFractionDigits:1}) + ' трлн ₸';
+  if (a >= 1e9) return (n/1e9).toLocaleString('ru-RU', {maximumFractionDigits:1}) + ' млрд ₸';
+  if (a >= 1e6) return (n/1e6).toLocaleString('ru-RU', {maximumFractionDigits:1}) + ' млн ₸';
+  return fmt(n);
+};
+const getToken = () => localStorage.getItem('pb_admin_token');
+const setToken = t => localStorage.setItem('pb_admin_token', t);
+
+function ghHeaders(){ return { 'Authorization': 'token ' + getToken(), 'Content-Type': 'application/json', 'Accept': 'application/vnd.github+json' }; }
+
+// ===== ВХОД ПО ТОКЕНУ =====
+async function tryLogin(){
+  const t = document.getElementById('admToken').value.trim();
+  const msg = document.getElementById('loginMsg');
+  if (!t) { msg.textContent = 'Вставь токен'; msg.style.color = '#f87171'; return; }
+  msg.textContent = '⏳ Проверяем токен…'; msg.style.color = 'var(--text2)';
+  try {
+    const r = await fetch(GH_API, { headers: { 'Authorization': 'token ' + t } });
+    if (r.ok) {
+      setToken(t);
+      msg.style.color = 'var(--ok)'; msg.textContent = '✅ Токен принят';
+      openPanel();
+    } else if (r.status === 401) {
+      msg.style.color = '#f87171'; msg.textContent = 'Токен неверный или истёк (401)';
+    } else if (r.status === 403) {
+      msg.style.color = '#f87171'; msg.textContent = 'Токен без доступа к penkov-bank (403) — дай Contents: Read & Write';
+    } else {
+      msg.style.color = '#f87171'; msg.textContent = 'GitHub ответил: ' + r.status;
+    }
+  } catch(e) { msg.style.color = '#f87171'; msg.textContent = 'Ошибка сети: ' + e.message; }
+}
+function logout(){ localStorage.removeItem('pb_admin_token'); location.reload(); }
+async function openPanel(){
+  document.getElementById('loginWrap').classList.add('hidden');
+  document.getElementById('panel').classList.remove('hidden');
+  await Promise.all([loadRequests(), renderLog(), updateVault()]);
+}
+
+// ===== ДАННЫЕ =====
+async function fetchCredits(){
+  const r = await fetch(GH_API + '?t=' + Date.now(), { headers: ghHeaders() });
+  if (!r.ok) throw new Error('GitHub ' + r.status);
+  const d = await r.json();
+  const content = d.content ? JSON.parse(atob(d.content.replace(/\n/g, ''))) : { credits: [] };
+  return { sha: d.sha, credits: content.credits || [] };
+}
+async function putCredits(credits, sha, message){
+  const put = await fetch(GH_API, {
+    method: 'PUT', headers: ghHeaders(),
+    body: JSON.stringify({ message,
+      content: btoa(unescape(encodeURIComponent(JSON.stringify({ credits }, null, 2)))), sha })
+  });
+  if (!put.ok) throw new Error('GitHub отклонил: ' + put.status + ' — возможно, файл изменился, обнови панель');
+  return put;
+}
+async function fetchNtfy(filter){
+  const r = await fetch('https://ntfy.sh/' + NTFY_TR + '/json?poll=1');
+  if (!r.ok) return [];
+  const text = await r.text();
+  const out = [];
+  text.trim().split('\n').forEach(line => {
+    try {
+      const ev = JSON.parse(line);
+      if (ev.type === 'message' && ev.message) {
+        const t = JSON.parse(ev.message);
+        if (filter(t)) out.push({ ...t, _id: ev.id, _ts: ev.time * 1000 });
+      }
+    } catch(e) {}
+  });
+  return out;
+}
+
+// ===== ХРАНИЛИЩЕ =====
+async function updateVault(){
+  try {
+    const [loans, statuses] = await Promise.all([
+      fetchNtfy(t => t.kind === 'loan' && typeof t.delta === 'number'),
+      fetchNtfy(t => t.kind === 'loan_status' && t.status === 'approved' && typeof t.sum === 'number')
+    ]);
+    let v = VAULT_START;
+    loans.forEach(l => v -= l.delta);
+    statuses.forEach(s => v -= s.sum); // одобренные админом тоже списывают хранилище
+    const el = document.getElementById('vaultVal');
+    el.textContent = '🏦 Хранилище банка: ' + fmtBig(v);
+    el.style.color = v <= 0 ? '#f87171' : 'var(--text2)';
+  } catch(e) { document.getElementById('vaultVal').textContent = '🏦 Хранилище: недоступно'; }
+}
+
+// ===== ЗАЯВКИ =====
+async function loadRequests(){
+  const box = document.getElementById('reqList');
+  try {
+    const [requests, statuses, creditsRes] = await Promise.all([
+      fetchNtfy(t => t.kind === 'loan_request'),
+      fetchNtfy(t => t.kind === 'loan_status'),
+      fetchCredits().catch(() => ({ sha: null, credits: [] }))
+    ]);
+    if (!requests.length) {
+      box.innerHTML = '<p style="color:var(--text2);font-size:13px">Заявок пока нет. Они появятся здесь автоматически — и придут тебе в ntfy-уведомлениями 📲</p>';
+      return;
+    }
+    // статус каждой заявки: по loan_status или по записи в credits.json
+    const stByReq = {};
+    statuses.forEach(s => { if (s.requestId) stByReq[s.requestId] = s.status; });
+    creditsRes.credits.forEach(c => { if (c.loan && c.loan.requestId) stByReq[c.loan.requestId] = 'approved'; });
+    // дедуп по requestId — берём последнюю
+    const byReq = {};
+    requests.forEach(r => { byReq[r.requestId] = r; });
+    const list = Object.values(byReq).sort((a, b) => b._ts - a._ts);
+    box.innerHTML = list.map(r => {
+      const st = stByReq[r.requestId] || 'pending';
+      const fee = r.fee || (r.type === 'mortgage' ? 0.08 : 0.15);
+      const debt = Math.ceil(r.sum * (1 + fee));
+      const payment = Math.ceil(debt / (r.term || 1));
+      const stHtml = { pending: '<span class="st-pending">⏳ на рассмотрении</span>',
+                       approved: '<span class="st-approved">✅ одобрена</span>',
+                       rejected: '<span class="st-rejected">✖ отклонена</span>' }[st];
+      return `<div class="req-card">
+        <div class="req-top"><b>${r.type === 'mortgage' ? '🏠 Ипотека' : '💰 Кредит'} · ${fmt(r.sum)}</b>${stHtml}</div>
+        <div class="req-meta">
+          Заявщик: <b>${(r.name || '—')}</b> · счёт <code>${r.num}</code><br>
+          Срок: ${r.term} платежей · комиссия ${Math.round((r.fee || fee) * 100)}% · вернуть ${fmt(debt)} (${fmt(payment)} × ${r.term})<br>
+          <time>${new Date(r.date || r._ts).toLocaleString('ru')}</time>
+        </div>
+        ${st === 'pending' ? `<div class="req-actions">
+          <button class="btn btn-primary btn-approve" onclick="approveReq('${r.requestId}')">✅ Одобрить и зачислить</button>
+          <button class="btn btn-reject" onclick="rejectReq('${r.requestId}','${r.num}')">✖ Отклонить</button>
+        </div>` : ''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    box.innerHTML = '<p style="color:#f87171;font-size:13px">Ошибка загрузки: ' + e.message + '</p>';
+  }
+}
+
+async function approveReq(requestId){
+  const btn = event.target; btn.disabled = true; btn.textContent = '⏳ Зачисляем…';
+  try {
+    const { sha, credits } = await fetchCredits();
+    if (credits.some(c => c.loan && c.loan.requestId === requestId)) { alert('Эта заявка уже одобрена'); return loadRequests(); }
+    // данные заявки из ntfy-кэша
+    const reqs = await fetchNtfy(t => t.kind === 'loan_request' && t.requestId === requestId);
+    const r = reqs[reqs.length - 1];
+    if (!r) { alert('Заявка устарела (ntfy-кэш истёк). Начисли вручную ниже.'); return; }
+    const fee = r.fee || (r.type === 'mortgage' ? 0.08 : 0.15);
+    const debt = Math.ceil(r.sum * (1 + fee));
+    const payment = Math.ceil(debt / (r.term || 1));
+    credits.push({ id: 'c' + Date.now(), num: r.num, sum: r.sum, note: 'кредит одобрен',
+      date: Date.now(), loan: { requestId, type: r.type, fee, term: r.term, debt, payment } });
+    await putCredits(credits, sha, 'approve loan ' + requestId + ' → ' + r.num + ' ' + r.sum + ' ₸');
+    // списываем хранилище + отмечаем статус для клиента и панели
+    await fetch('https://ntfy.sh/' + NTFY_TR, { method: 'POST',
+      body: JSON.stringify({ kind: 'loan', delta: r.sum }) }).catch(() => {});
+    await fetch('https://ntfy.sh/' + NTFY_TR, { method: 'POST',
+      body: JSON.stringify({ kind: 'loan_status', status: 'approved', requestId, num: r.num, sum: r.sum }) }).catch(() => {});
+    alert('✅ Одобрено! ' + fmt(r.sum) + ' зачислено на ' + r.num + '.\nКлиент получит деньги кнопкой «Обновить баланс».');
+    await Promise.all([loadRequests(), renderLog(), updateVault()]);
+  } catch(e) {
+    alert('Ошибка одобрения: ' + e.message);
+    btn.disabled = false; btn.textContent = '✅ Одобрить и зачислить';
+  }
+}
+
+async function rejectReq(requestId, num){
+  if (!confirm('Отклонить заявку? Клиент увидит отказ при «Обновить баланс».')) return;
+  const btn = event.target; btn.disabled = true;
+  try {
+    await fetch('https://ntfy.sh/' + NTFY_TR, { method: 'POST',
+      body: JSON.stringify({ kind: 'loan_status', status: 'rejected', requestId, num }) });
+    alert('Заявка отклонена ✖');
+    loadRequests();
+  } catch(e) { alert('Ошибка: ' + e.message); btn.disabled = false; }
+}
+
+// ===== РУЧНОЕ НАЧИСЛЕНИЕ =====
+async function creditAccount(){
+  const num = document.getElementById('admNum').value.trim().toUpperCase();
+  const sum = +document.getElementById('admSum').value;
+  const msg = document.getElementById('admMsg');
+  if (!num || !sum || sum <= 0) { msg.textContent = 'Заполни номер счёта и сумму'; msg.style.color = '#f87171'; return; }
+  if (!/^PB-\d{12}$/.test(num)) { msg.textContent = 'Номер должен быть вида PB-123456789012'; msg.style.color = '#f87171'; return; }
+  msg.textContent = '⏳ Отправляем...'; msg.style.color = 'var(--text2)';
+  try {
+    const { sha, credits } = await fetchCredits();
+    credits.push({ id: 'c' + Date.now(), num, sum, note: 'начисление', date: Date.now() });
+    await putCredits(credits, sha, 'credit ' + num + ' ' + sum + ' ₸');
+    msg.innerHTML = '✅ Начислено <b>' + new Intl.NumberFormat('ru-RU').format(sum) + ' демо ₸</b> на ' + num +
+      '. Клиент нажмёт «Обновить баланс» — и деньги придут.';
+    msg.style.color = 'var(--ok)';
+    document.getElementById('admNum').value = ''; document.getElementById('admSum').value = '';
+    renderLog();
+  } catch(e) { msg.textContent = 'Ошибка: ' + e.message; msg.style.color = '#f87171'; }
+}
+
+async function renderLog(){
+  try {
+    const { credits } = await fetchCredits();
+    document.getElementById('admLog').innerHTML = credits.slice(-10).reverse().map(c =>
+      `<div class="op-row"><span>${c.num} · <b>${new Intl.NumberFormat('ru-RU').format(c.sum)} ₸</b>${c.note ? ' · ' + c.note : ''}</span>
+       <time>${new Date(c.date).toLocaleDateString('ru')}</time></div>`).join('') || '<p style="color:var(--text2);font-size:13px">Начислений пока нет</p>';
+  } catch(e) { document.getElementById('admLog').innerHTML = '<p style="color:#f87171;font-size:13px">Не удалось загрузить</p>'; }
+}
+
+// автозапуск: токен сохранён — сразу в панель
+if (getToken()) openPanel();
+</script>
+</body>
+</html>
