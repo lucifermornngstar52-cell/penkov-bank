@@ -64,6 +64,36 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
 footer{text-align:center;color:var(--text2);font-size:13px;margin-top:50px;line-height:2}
 footer a{color:var(--p2)}
 @media(max-width:640px){.grid{grid-template-columns:1fr}}
+
+/* ===== АКЦИИ (биржа) ===== */
+.ex-balance{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:14px 0 22px;font-size:13.5px}
+.ex-balance span{background:var(--card);border:1px solid var(--line);padding:9px 18px;border-radius:999px;color:var(--text2)}
+.ex-balance b{color:var(--text)}
+.stock-card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;transition:.3s}
+.stock-card:hover{transform:translateY(-6px);border-color:rgba(167,139,250,.5);box-shadow:0 14px 44px rgba(124,58,237,.25)}
+.stock-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.stock-ico{width:40px;height:40px;border-radius:12px;background:rgba(124,58,237,.14);display:flex;align-items:center;justify-content:center;font-size:20px}
+.stock-head b{font-size:15px;display:block;letter-spacing:.5px}
+.stock-name{font-size:12px;color:var(--text2)}
+.stock-chg{margin-left:auto;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px}
+.stock-chg.up{color:var(--ok);background:rgba(52,211,153,.1)}
+.stock-chg.down{color:var(--red);background:rgba(239,68,68,.1)}
+.stock-price{font-size:22px;font-weight:800;margin:2px 0 8px}
+.spark{width:100%;height:44px;display:block;margin-bottom:8px}
+.spark polyline{fill:none;stroke-width:1.6}
+.spark.up polyline{stroke:var(--ok)}
+.spark.down polyline{stroke:var(--red)}
+.stock-desc{font-size:12.5px;color:var(--text2);line-height:1.5;margin-bottom:12px;min-height:38px}
+.stock-hold{font-size:12.5px;color:var(--text2);background:rgba(124,58,237,.08);border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-bottom:12px}
+.stock-hold .pl-up{color:var(--ok)}
+.stock-hold .pl-down{color:var(--red)}
+.stock-actions{display:flex;gap:8px}
+.stock-actions input{width:74px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--text);font-size:13px;font-family:inherit}
+.stock-btn{flex:1;border:none;border-radius:10px;padding:10px 6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.stock-btn.buy{background:linear-gradient(135deg,#059669,#047857);color:#fff}
+.stock-btn.buy:hover{filter:brightness(1.15)}
+.stock-btn.sell{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.35)}
+.stock-btn.sell:hover{background:rgba(239,68,68,.2)}
 </style>
 </head>
 <body>
@@ -75,7 +105,7 @@ footer a{color:var(--p2)}
 
   <div class="hero-band">
     <h1>Магазин активов для <span>Монополии</span></h1>
-    <p>Недвижимость и тачки — от студии в Караганде до Bugatti. Цены честные, по рынку Казахстана. Всё за демо-тенге PenkovBank.</p>
+    <p>Недвижимость, тачки и акции — от студии в Караганде до Bugatti и акций Kaspi. Цены честные, по рынку Казахстана. Всё за демо-тенге PenkovBank.</p>
     <div class="assets-bar" id="assetsBar" style="display:none">
       <span>🏠 Активов: <b id="ownCount">0</b></span>
       <span>💎 Стоимость портфеля: <b id="ownSum">0 ₸</b></span>
@@ -100,6 +130,17 @@ footer a{color:var(--p2)}
       <p>От Матиза до Chiron — отсортировано от бюджетных к суперкарам</p>
     </div>
     <div class="grid" id="carsGrid"></div>
+
+    <div class="sec-head">
+      <h2><i>📈</i>Акции</h2>
+      <p>Живая биржа: HikariOS, PenkovBank, PenkovCasino и гиганты Казахстана. Цены дрейфуют каждые 5 секунд.</p>
+    </div>
+    <div class="ex-balance">
+      <span>🏦 Счёт: <b id="exBalVal">0 ₸</b></span>
+      <span>💼 Портфель акций: <b id="exPortVal">0 ₸</b></span>
+      <span>📊 P/L: <b id="exPLVal">0 ₸</b></span>
+    </div>
+    <div class="grid" id="stocksGrid"></div>
   </div>
 
   <footer>
@@ -204,6 +245,112 @@ function sellItem(id){
 
 refreshBal();
 render();
+
+// ===== БИРЖА АКЦИЙ =====
+const STOCKS = [
+  { t:'HKOS', name:'HikariOS',      e:'◐',  base:850,   vol:0.045, desc:'Маркетплейс приложений. Стартап: цена может и взлететь, и упасть.' },
+  { t:'PB',   name:'PenkovBank',    e:'🏦', base:1250,  vol:0.020, desc:'Банк без единого филиала, весь — код. Стабильно и с кешбэком.' },
+  { t:'PC',   name:'PenkovCasino',  e:'🎲', base:340,   vol:0.055, desc:'Самое волатильное удовольствие демо-мира. Не для слабонервных.' },
+  { t:'KSPI', name:'Kaspi.kz',      e:'💳', base:36500, vol:0.015, desc:'Суперапп Казахстана. Дивидендный чемпион с банком, магазином и доставкой.' },
+  { t:'HLYK', name:'Halyk Bank',    e:'🏛', base:9200,  vol:0.018, desc:'Крупнейший банк страны. Скучный, надёжный, растёт.' },
+  { t:'KMGZ', name:'KazMunayGas',   e:'🛢', base:14800, vol:0.022, desc:'Нефтяной гигант. Живёт в ритме барреля.' },
+  { t:'AIRA', name:'Air Astana',    e:'✈️', base:2300,  vol:0.025, desc:'Свежее IPO. Небо — не предел, а коридор роста.' }
+];
+let stx = { prices: {}, open: {}, hist: {} };
+const getHold = () => JSON.parse(localStorage.getItem('hik_stocks') || '{}');
+const saveHold = h => localStorage.setItem('hik_stocks', JSON.stringify(h));
+function stockStateInit(){
+  try { stx = JSON.parse(localStorage.getItem('hik_stock_state') || 'null') || stx; } catch(e){}
+  const now = Date.now();
+  STOCKS.forEach(s => {
+    if (!stx.prices[s.t]) stx.prices[s.t] = s.base * (1 + (Math.random() - .5) * s.vol * 2);
+    if (!stx.open[s.t] || now - (stx.openTs || 0) > 86400000) { stx.open[s.t] = stx.prices[s.t]; stx.openTs = now; }
+    if (!stx.hist[s.t]) {
+      const h = []; let x = stx.prices[s.t] * (1 - (Math.random() - .45) * .06);
+      for (let i = 0; i < 24; i++) { x *= 1 + (Math.random() - .5) * .018; h.push(x); }
+      h.push(stx.prices[s.t]);
+      stx.hist[s.t] = h;
+    }
+  });
+}
+function stockDrift(){
+  STOCKS.forEach(s => {
+    stx.prices[s.t] = Math.max(1, stx.prices[s.t] * (1 + (Math.random() - .5) * 2 * s.vol * .35));
+    stx.hist[s.t].push(stx.prices[s.t]);
+    if (stx.hist[s.t].length > 25) stx.hist[s.t].shift();
+  });
+  localStorage.setItem('hik_stock_state', JSON.stringify(stx));
+}
+const stockChg = t => (stx.prices[t] - stx.open[t]) / stx.open[t] * 100;
+function sparkSVG(t){
+  const up = stockChg(t) >= 0, h = stx.hist[t];
+  const mn = Math.min(...h), mx = Math.max(...h), sp = (mx - mn) || 1;
+  const pts = h.map((v, i) => (i / (h.length - 1) * 100).toFixed(1) + ',' + (30 - (v - mn) / sp * 26 + 2).toFixed(1)).join(' ');
+  return '<svg class="spark ' + (up ? 'up' : 'down') + '" viewBox="0 0 100 32" preserveAspectRatio="none"><polyline points="' + pts + '"/></svg>';
+}
+function renderStocks(){
+  const a = getAcct();
+  const h = getHold();
+  document.getElementById('exBalVal').textContent = fmt(a ? a.balance : 0) + ' ₸';
+  const pv = Object.entries(h).reduce((s, [t, o]) => s + (stx.prices[t] || 0) * o.qty, 0);
+  const pl = Object.entries(h).reduce((s, [t, o]) => s + ((stx.prices[t] || 0) - o.avg) * o.qty, 0);
+  document.getElementById('exPortVal').textContent = fmt(pv) + ' ₸';
+  const plEl = document.getElementById('exPLVal');
+  plEl.textContent = (pl >= 0 ? '+' : '') + fmt(pl) + ' ₸';
+  plEl.style.color = pl >= 0 ? 'var(--ok)' : 'var(--red)';
+  document.getElementById('stocksGrid').innerHTML = STOCKS.map(s => {
+    const c = stockChg(s.t), up = c >= 0, own = h[s.t];
+    const pln = own ? (stx.prices[s.t] - own.avg) * own.qty : 0;
+    const hold = own
+      ? '<div class="stock-hold">💼 В портфеле: <b>' + own.qty + ' шт</b> · ср. ' + fmt(own.avg) + ' ₸ · P/L <b class="' + (pln >= 0 ? 'pl-up' : 'pl-down') + '">' + (pln >= 0 ? '+' : '') + fmt(pln) + ' ₸</b></div>'
+      : '<div class="stock-hold" style="opacity:.55">💼 Пока не куплено</div>';
+    return '<div class="stock-card">' +
+      '<div class="stock-head"><span class="stock-ico">' + s.e + '</span><div><b>' + s.t + '</b><span class="stock-name">' + s.name + '</span></div>' +
+      '<span class="stock-chg ' + (up ? 'up' : 'down') + '">' + (up ? '+' : '') + c.toFixed(2) + '%</span></div>' +
+      '<div class="stock-price">' + fmt(stx.prices[s.t]) + ' ₸</div>' + sparkSVG(s.t) +
+      '<p class="stock-desc">' + s.desc + '</p>' + hold +
+      '<div class="stock-actions"><input type="number" id="qty-' + s.t + '" value="1" min="1">' +
+      '<button class="stock-btn buy" onclick="buyStock(\'' + s.t + '\')">Купить</button>' +
+      '<button class="stock-btn sell" onclick="sellStock(\'' + s.t + '\')">Продать</button></div></div>';
+  }).join('');
+}
+function buyStock(t){
+  const s = STOCKS.find(x => x.t === t); if (!s) return;
+  const a = getAcct();
+  if (!a) { alert('Сначала открой счёт PenkovBank 🏦'); return; }
+  const qty = Math.floor(+document.getElementById('qty-' + t).value);
+  if (!qty || qty <= 0) { alert('Введи количество акций 🙂'); return; }
+  const cost = qty * stx.prices[t];
+  if (cost > a.balance) { alert('Не хватает демо-тенге: нужно ' + fmt(cost) + ' ₸, на счету ' + fmt(a.balance) + ' ₸'); return; }
+  a.balance -= cost;
+  a.history.push({ op: '📈 Куплены акции ' + t + ' (' + s.name + '): ' + qty + ' шт', sum: -cost, date: Date.now() });
+  saveAcct(a);
+  const h = getHold(); const o = h[t] || { qty: 0, avg: 0 };
+  o.avg = (o.avg * o.qty + stx.prices[t] * qty) / (o.qty + qty);
+  o.qty += qty; h[t] = o; saveHold(h);
+  refreshBal(); renderStocks();
+  alert('Куплено ' + qty + ' шт ' + t + ' за ' + fmt(cost) + ' ₸ 📈');
+}
+function sellStock(t){
+  const s = STOCKS.find(x => x.t === t); if (!s) return;
+  const a = getAcct(); if (!a) { alert('Нужен счёт PenkovBank 🏦'); return; }
+  const h = getHold(); const o = h[t];
+  if (!o || o.qty <= 0) { alert('У тебя нет акций ' + t + ' 🙂'); return; }
+  const qty = Math.min(o.qty, Math.floor(+document.getElementById('qty-' + t).value) || o.qty);
+  if (qty <= 0) { alert('Введи количество 🙂'); return; }
+  const gain = qty * stx.prices[t];
+  a.balance += gain;
+  a.history.push({ op: '📉 Проданы акции ' + t + ' (' + s.name + '): ' + qty + ' шт', sum: gain, date: Date.now() });
+  saveAcct(a);
+  o.qty -= qty;
+  if (o.qty <= 0) delete h[t]; else h[t] = o;
+  saveHold(h);
+  refreshBal(); renderStocks();
+  alert('Продано ' + qty + ' шт ' + t + ' за ' + fmt(gain) + ' ₸');
+}
+stockStateInit();
+renderStocks();
+setInterval(() => { stockDrift(); renderStocks(); }, 5000);
 </script>
 </body>
 </html>
