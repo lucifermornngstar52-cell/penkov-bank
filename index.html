@@ -504,6 +504,42 @@ function createAccount(){
   document.getElementById('account').scrollIntoView({behavior:'smooth'});
 }
 
+// ===== ХРАНИЛИЩЕ БАНКА (общее для всех игроков) =====
+const VAULT_START = 10000000000000; // 10 трлн демо ₸
+
+function fmtBig(n){
+  const a = Math.abs(n);
+  if (a >= 1e12) return (n/1e12).toLocaleString('ru-RU', {maximumFractionDigits:1}) + ' трлн ₸';
+  if (a >= 1e9) return (n/1e9).toLocaleString('ru-RU', {maximumFractionDigits:1}) + ' млрд ₸';
+  if (a >= 1e6) return (n/1e6).toLocaleString('ru-RU', {maximumFractionDigits:1}) + ' млн ₸';
+  return fmt(n);
+}
+async function fetchVault(){
+  try {
+    const r = await fetch('https://ntfy.sh/' + NTFY_TR + '/json?poll=1');
+    if (!r.ok) return VAULT_START;
+    const text = await r.text();
+    let v = VAULT_START;
+    text.trim().split('\n').forEach(line => {
+      try {
+        const ev = JSON.parse(line);
+        if (ev.type === 'message' && ev.message) {
+          const m = JSON.parse(ev.message);
+          if (m.kind === 'loan' && typeof m.delta === 'number') v -= m.delta;
+        }
+      } catch(e) {}
+    });
+    return v;
+  } catch(e) { return null; }
+}
+async function updateVaultDisplay(){
+  const el = document.getElementById('vaultVal'); if (!el) return;
+  const v = await fetchVault();
+  if (v === null) { el.textContent = '🏦 Хранилище банка: недоступно'; return; }
+  el.textContent = '🏦 Хранилище банка: ' + fmtBig(v);
+  el.style.color = v <= 0 ? '#f87171' : 'var(--text2)';
+}
+
 function renderCabinet(){
   const a = getAcct();
   document.getElementById('noAccount').style.display = a ? 'none' : 'block';
@@ -520,7 +556,7 @@ function renderCabinet(){
   document.getElementById('cabinet').innerHTML = `
     <div class="acct-card">
       <div class="acct-top">
-        <div class="acct-num">Демо-счёт<b>${a.num}</b><span style="font-size:12px;color:var(--text2)">Владелец: ${a.name}</span></div>
+        <div class="acct-num">Демо-счёт<b>${a.num}</b><span style="font-size:12px;color:var(--text2)">Владелец: ${a.name}</span><span id="vaultVal" style="display:block;margin-top:6px;font-size:12px">🏦 Хранилище банка: …</span></div>
         <div class="acct-bal"><span>Баланс</span><b>${new Intl.NumberFormat('ru-RU').format(a.balance)} ₸</b></div>
       </div>
       <div class="acct-actions">
@@ -539,6 +575,7 @@ function renderCabinet(){
       <h3 style="font-size:15px;margin-bottom:6px">Операции</h3>
       ${hist || '<p style="color:var(--text2);font-size:13px">Пока пусто</p>'}
     </div>`;
+  updateVaultDisplay();
 }
 
 function copyNum(){
@@ -747,7 +784,7 @@ function calcLoan(){
   document.getElementById('lsPay').textContent = fmt(payment);
   document.getElementById('lsTotal').textContent = 'Всего вернуть ' + fmt(debt) + ' ₸ за ' + term + ' пл. · комиссия ' + Math.round(fee*100) + '% = ' + fmt(debt - sum) + ' ₸';
 }
-function applyLoan(){
+async function applyLoan(){
   const acc = getAcct();
   if (!acc) {
     alert('Сначала открой демо счёт в разделе «Личный кабинет» 🙂');
@@ -766,12 +803,18 @@ function applyLoan(){
     alert(isMort ? 'У тебя уже есть активная ипотека — сначала погаси её.' : 'У тебя уже есть активный кредит — сначала погаси его.');
     return;
   }
+  const vault = await fetchVault();
+  if (vault !== null && vault < sum) {
+    alert('🏦 В хранилище банка осталось ' + fmtBig(vault) + ' — столько не дать. Кредит не выдан.');
+    return;
+  }
   const debt = Math.ceil(sum * (1 + fee));
   const payment = Math.ceil(debt / term);
   acc.loans.push({ id: Date.now(), type: loanMode, sum, debt, payment, term, date: Date.now() });
   acc.balance += sum;
   acc.history.push({ op: (isMort ? '🏠 Ипотека выдана' : '💰 Кредит выдан') + ' на ' + term + ' пл.', sum, date: Date.now() });
   saveAcct(acc); renderCabinet();
+  fetch('https://ntfy.sh/' + NTFY_TR, { method: 'POST', body: JSON.stringify({ kind: 'loan', delta: sum }) }).catch(() => {});
   showOk((isMort ? 'Ипотека' : 'Кредит') + ' одобрен! 🎉',
     'На счёт зачислено <b>' + fmt(sum) + ' демо ₸</b>.<br>Вернуть: ' + fmt(debt) + ' ₸ (' + fmt(payment) + ' ₸ × ' + term +
     ' платежей, комиссия ' + Math.round(fee*100) + '%).<br>Гасить — кнопкой «Оплатить кредит» в разделе «Кредиты».');
@@ -786,6 +829,7 @@ function payLoan(i, mode){
   acc.history.push({ op: 'Платёж по ' + (l.type === 'mortgage' ? 'ипотеке' : 'кредиту') + (l.debt === 0 ? ' — ДОЛГ ЗАКРЫТ 🎉' : ''), sum: -amount, date: Date.now() });
   if (l.debt === 0) acc.loans = acc.loans.filter(x => x.id !== l.id);
   saveAcct(acc); renderCabinet();
+  fetch('https://ntfy.sh/' + NTFY_TR, { method: 'POST', body: JSON.stringify({ kind: 'loan', delta: -amount }) }).catch(() => {});
   openLoan('repay');
 }
 function showOk(title, text){
