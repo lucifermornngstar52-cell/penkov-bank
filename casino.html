@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PenkovCasino — играй на демо-тенге</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%237c3aed'/><text x='50' y='70' font-size='58' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>🎲</text></svg>">
+<style>
+:root{
+  --bg:#0b0b12; --bg2:#12121c; --card:#161626; --line:rgba(124,58,237,.22);
+  --p:#7c3aed; --p2:#a78bfa; --text:#e8e8f0; --text2:#9a9ab0; --ok:#34d399; --gold:#fbbf24; --red:#ef4444;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+  background-image:radial-gradient(rgba(124,58,237,.14) 1px,transparent 1px);background-size:26px 26px;padding-bottom:60px}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1000px;margin:0 auto;padding:24px 5vw}
+
+header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:26px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px}
+.logo-badge{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--p),#4c1d95);
+  display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 0 24px rgba(124,58,237,.5)}
+.balance-pill{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);
+  border-radius:999px;padding:9px 18px;font-weight:700}
+.balance-pill b{background:linear-gradient(135deg,#fff,var(--p2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.balance-pill .acc{font-size:11px;color:var(--text2);font-weight:400}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:14px;border:none;cursor:pointer;
+  font-size:14px;font-weight:600;transition:.25s;font-family:inherit}
+.btn-primary{background:linear-gradient(135deg,var(--p),#6d28d9);color:#fff;box-shadow:0 4px 24px rgba(124,58,237,.35)}
+.btn-primary:hover{transform:translateY(-2px)}
+.btn-ghost{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--line)}
+.btn-gold{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 4px 24px rgba(245,158,11,.3)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+.hero-band{border-radius:24px;padding:40px 6vw;text-align:center;position:relative;overflow:hidden;margin-bottom:26px;
+  background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(76,29,149,.08));border:1px solid var(--line)}
+.hero-band h1{font-size:clamp(26px,4.5vw,42px);font-weight:800;letter-spacing:-.5px}
+.hero-band p{color:var(--text2);margin-top:10px;font-size:14px}
+
+.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px}
+.tile h3{font-size:17px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.tile h3 .bal-delta{font-size:13px;font-weight:700}
+
+.bet-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.bet-row input{flex:1;min-width:120px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;
+  padding:12px 14px;color:#fff;font-size:15px;outline:none;font-family:inherit}
+.bet-row input:focus{border-color:var(--p)}
+.quick{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.quick button{background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  color:var(--text2);font-size:12px;cursor:pointer}
+.quick button:hover{border-color:var(--p);color:#fff}
+
+/* dice */
+.dice-face{display:flex;justify-content:center;gap:14px;margin:18px 0}
+.die{width:74px;height:74px;border-radius:16px;background:linear-gradient(145deg,#fff,#e5e7eb);display:flex;
+  align-items:center;justify-content:center;font-size:38px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.die.rolling{animation:roll .5s infinite}
+@keyframes roll{0%{transform:rotate(0)}25%{transform:rotate(8deg) translateY(-8px)}50%{transform:rotate(0)}75%{transform:rotate(-8deg) translateY(-8px)}100%{transform:rotate(0)}}
+.choice-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.choice{flex:1;min-width:100px;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:12px 8px;
+  text-align:center;cursor:pointer;font-size:13px;color:var(--text2);transition:.2s}
+.choice b{display:block;font-size:15px;color:#fff}
+.choice:hover{border-color:var(--p)}
+.choice.sel{border-color:var(--p);background:rgba(124,58,237,.15);color:var(--p2)}
+.choice.sel b{color:var(--p2)}
+
+/* roulette */
+.wheel{width:200px;height:200px;border-radius:50%;margin:18px auto;position:relative;
+  background:conic-gradient(var(--red) 0 45deg,var(--bg2) 45deg 90deg,var(--red) 90deg 135deg,var(--bg2) 135deg 180deg,
+  var(--red) 180deg 225deg,var(--bg2) 225deg 270deg,var(--red) 270deg 315deg,var(--bg2) 315deg 360deg);
+  border:6px solid var(--gold);box-shadow:0 0 40px rgba(245,158,11,.35);transition:transform 3.4s cubic-bezier(.2,.8,.2,1)}
+.wheel::after{content:'';position:absolute;inset:40%;border-radius:50%;background:var(--gold);box-shadow:inset 0 0 12px rgba(0,0,0,.5)}
+.wheel-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;font-size:44px;font-weight:800;
+  text-shadow:0 2px 20px rgba(0,0,0,.6);pointer-events:none}
+.rc{background:var(--red);border-color:var(--red)}
+.bc{background:#26263a;border-color:#6b7280}
+.zc{background:rgba(52,211,153,.15);border-color:var(--ok)}
+.rc.sel,.bc.sel,.zc.sel{outline:2px solid var(--gold);color:#fff}
+
+/* slots */
+.reels{display:flex;justify-content:center;gap:12px;margin:18px 0}
+.reel{width:76px;height:76px;border-radius:16px;background:var(--bg2);border:1px solid var(--line);display:flex;
+  align-items:center;justify-content:center;font-size:38px}
+.reel.spin{animation:spinreel .35s infinite}
+@keyframes spinreel{0%{filter:blur(0)}50%{filter:blur(3px);transform:scale(1.08)}100%{filter:blur(0)}}
+
+.result{margin-top:16px;padding:14px;border-radius:14px;text-align:center;font-weight:700;display:none}
+.result.win{display:block;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.4);color:var(--ok)}
+.result.lose{display:block;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);color:var(--red)}
+.result.info{display:block;background:rgba(124,58,237,.1);border:1px solid var(--line);color:var(--p2)}
+
+footer{margin-top:44px;text-align:center;color:var(--text2);font-size:12px;line-height:1.8}
+footer a:hover{color:var(--p2)}
+.no-acct{border-radius:20px;border:1px solid var(--gold);background:rgba(245,158,11,.08);padding:26px;text-align:center}
+.no-acct h2{font-size:22px;margin-bottom:10px}
+.no-acct p{color:var(--text2);font-size:14px;margin-bottom:18px}
+#games{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="logo" href="index.html"><span class="logo-badge">🎲</span>PenkovCasino</a>
+    <div class="balance-pill"><span>💵</span><span><b id="balVal">0</b> демо ₸<div class="acc" id="balAcc"></div></span></div>
+  </header>
+
+  <div class="hero-band">
+    <h1>Казино PenkovBank 🎰</h1>
+    <p>Играй на демо-тенге со своего счёта. Проигрыш — тоже демо. Почти безболезненно.</p>
+  </div>
+
+  <div id="needAcct" class="no-acct">
+    <h2>Казино только для клиентов банка ⚠️</h2>
+    <p>Чтобы играть, нужен демо-счёт PenkovBank. Открой его за 5 секунд — и возвращайся к столу.</p>
+    <a class="btn btn-gold" href="index.html#account">🚀 Открыть демо счёт</a>
+  </div>
+
+  <div id="games" class="grid">
+    <!-- DICE -->
+    <div class="tile">
+      <h3>🎲 Кубики <span style="font-size:12px;color:var(--text2)">больше/меньше 7</span></h3>
+      <div class="bet-row"><input type="number" id="diceBet" value="100" min="1"></div>
+      <div class="quick">
+        <button onclick="setBet('diceBet',100)">+100</button><button onclick="setBet('diceBet',500)">+500</button>
+        <button onclick="setBet('diceBet',1000)">+1 000</button><button onclick="allIn('diceBet')">ВСЁ НА КОН 🤠</button>
+      </div>
+      <div class="choice-row">
+        <div class="choice" data-g="dice" data-v="under" onclick="pickChoice(this)">Меньше 7<b>x2</b></div>
+        <div class="choice" data-g="dice" data-v="seven" onclick="pickChoice(this)">Ровно 7<b>x5</b></div>
+        <div class="choice" data-g="dice" data-v="over" onclick="pickChoice(this)">Больше 7<b>x2</b></div>
+      </div>
+      <div class="dice-face"><div class="die" id="die1">🎲</div><div class="die" id="die2">🎲</div></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="rollDice()">Бросить</button>
+      <div class="result" id="diceRes"></div>
+    </div>
+
+    <!-- ROULETTE -->
+    <div class="tile">
+      <h3>🎡 Рулетка <span style="font-size:12px;color:var(--text2)">красное / чёрное / зеро</span></h3>
+      <div class="bet-row"><input type="number" id="rouBet" value="100" min="1"></div>
+      <div class="quick">
+        <button onclick="setBet('rouBet',100)">+100</button><button onclick="setBet('rouBet',500)">+500</button>
+        <button onclick="setBet('rouBet',1000)">+1 000</button><button onclick="allIn('rouBet')">ВСЁ НА КОН 🤠</button>
+      </div>
+      <div class="choice-row">
+        <div class="choice rc" data-g="rou" data-v="red" onclick="pickChoice(this)">Красное<b>x2</b></div>
+        <div class="choice bc" data-g="rou" data-v="black" onclick="pickChoice(this)">Чёрное<b>x2</b></div>
+        <div class="choice zc" data-g="rou" data-v="zero" onclick="pickChoice(this)">Зеро<b>x14</b></div>
+      </div>
+      <div class="wheel" id="wheel"><div class="wheel-num" id="wheelNum">?</div></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="spinRoulette()">Крутить</button>
+      <div class="result" id="rouRes"></div>
+    </div>
+
+    <!-- SLOTS -->
+    <div class="tile">
+      <h3>🎰 Слоты <span style="font-size:12px;color:var(--text2)">три в ряд</span></h3>
+      <div class="bet-row"><input type="number" id="slotBet" value="100" min="1"></div>
+      <div class="quick">
+        <button onclick="setBet('slotBet',100)">+100</button><button onclick="setBet('slotBet',500)">+500</button>
+        <button onclick="setBet('slotBet',1000)">+1 000</button><button onclick="allIn('slotBet')">ВСЁ НА КОН 🤠</button>
+      </div>
+      <div class="reels"><div class="reel" id="r1">🍒</div><div class="reel" id="r2">⭐</div><div class="reel" id="r3">💜</div></div>
+      <p style="text-align:center;font-size:11px;color:var(--text2);margin-bottom:14px">💎 x50 · 7️⃣ x25 · ⭐ x10 · 🍒 x5 · 💜 x4</p>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="spinSlots()">Крутить барабаны</button>
+      <div class="result" id="slotRes"></div>
+    </div>
+  </div>
+
+  <footer>
+    Играй ответственно. Все деньги — демо-тенге PenkovBank, реальной ценности не имеют.<br>
+    При зависимостях от рулетки из Монополии — жалуйся банку: он сам виноват.<br>
+    <a href="index.html">← PenkovBank</a> · <a href="casino.html">Казино</a>
+  </footer>
+</div>
+
+<script>
+const getAcct = () => JSON.parse(localStorage.getItem('pb_account') || 'null');
+const saveAcct = a => localStorage.setItem('pb_account', JSON.stringify(a));
+const fmt = n => new Intl.NumberFormat('ru-RU').format(n);
+let picks = { dice:'over', rou:'red' };
+
+function refreshBal(){
+  const a = getAcct();
+  if (a) {
+    document.getElementById('needAcct').style.display = 'none';
+    document.getElementById('games').style.display = 'grid';
+    document.getElementById('balVal').textContent = fmt(a.balance);
+    document.getElementById('balAcc').textContent = a.num;
+  }
+}
+function changeBal(delta, op){
+  const a = getAcct(); if (!a) return false;
+  a.balance += delta;
+  if (op) a.history.push({ op, sum: Math.abs(delta), date: Date.now() });
+  saveAcct(a); refreshBal(); return true;
+}
+function takeBet(id){
+  const a = getAcct(); if (!a) return null;
+  const bet = Math.floor(+document.getElementById(id).value);
+  if (!bet || bet <= 0) { alert('Введи ставку 🙂'); return null; }
+  if (bet > a.balance) { alert('Недостаточно демо-тенге! На счету ' + fmt(a.balance) + ' ₸'); return null; }
+  changeBal(-bet);
+  return bet;
+}
+function setBet(id, v){ document.getElementById(id).value = Math.max(1, (+document.getElementById(id).value || 0) + v); }
+function allIn(id){ const a = getAcct(); if (a) document.getElementById(id).value = a.balance; }
+function pickChoice(el){
+  picks[el.dataset.g] = el.dataset.v;
+  document.querySelectorAll('[data-g="'+el.dataset.g+'"]').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+document.querySelector('[data-g="dice"][data-v="over"]').classList.add('sel');
+document.querySelector('[data-g="rou"][data-v="red"]').classList.add('sel');
+function show(id, cls, text){
+  const el = document.getElementById(id);
+  el.className = 'result ' + cls; el.innerHTML = text;
+}
+
+// ===== DICE =====
+function rollDice(){
+  const bet = takeBet('diceBet'); if (!bet) return;
+  const d1 = document.getElementById('die1'), d2 = document.getElementById('die2');
+  d1.classList.add('rolling'); d2.classList.add('rolling');
+  const iv = setInterval(() => {
+    d1.textContent = 1 + Math.floor(Math.random() * 6);
+    d2.textContent = 1 + Math.floor(Math.random() * 6);
+  }, 80);
+  setTimeout(() => {
+    clearInterval(iv);
+    const a = 1 + Math.floor(Math.random() * 6), b = 1 + Math.floor(Math.random() * 6);
+    d1.textContent = a; d2.textContent = b;
+    d1.classList.remove('rolling'); d2.classList.remove('rolling');
+    const sum = a + b, ch = picks.dice;
+    const won = (ch === 'under' && sum < 7) || (ch === 'over' && sum > 7) || (ch === 'seven' && sum === 7);
+    const mult = ch === 'seven' ? 5 : 2;
+    if (won) {
+      const prize = bet * mult;
+      changeBal(prize, 'Выигрыш в казино (кубики): ' + a + '+' + b);
+      show('diceRes','win','🎉 Сумма ' + sum + '! Выигрыш +' + fmt(prize) + ' демо ₸ (x' + mult + ')');
+    } else {
+      changeBal(0); show('diceRes','lose','💀 Сумма ' + sum + '. Ставка ' + fmt(bet) + ' ₸ ушла казино');
+    }
+  }, 1300);
+}
+
+// ===== ROULETTE =====
+let wheelDeg = 0;
+function spinRoulette(){
+  const bet = takeBet('rouBet'); if (!bet) return;
+  const wheel = document.getElementById('wheel'), num = document.getElementById('wheelNum');
+  const slots = 8; // 4 red, 4 black on wheel + zero section handled separately
+  const result = Math.random();
+  const isZero = result < 0.0714;               // ~1/14
+  const isRed = !isZero && Math.random() < 0.5;
+  // wheel has 8 sectors of 45deg; we land the pointer (top) on target sector
+  const target = isZero ? 0 : isRed ? 0 : 45;  // sector start angle for display
+  wheelDeg += 360 * (5 + Math.random() * 3) + ((360 - target) % 360);
+  wheel.style.transform = 'rotate(' + wheelDeg + 'deg)';
+  num.textContent = '?';
+  setTimeout(() => {
+    if (isZero) { num.textContent = '0'; num.style.color = '#34d399'; }
+    else { const n = 1 + Math.floor(Math.random() * 36); num.textContent = n; num.style.color = isRed ? '#ef4444' : '#e8e8f0'; }
+    const ch = picks.rou;
+    const won = (ch === 'zero' && isZero) || (ch === 'red' && isRed) || (ch === 'black' && !isRed && !isZero);
+    const mult = ch === 'zero' ? 14 : 2;
+    if (won) {
+      const prize = bet * mult;
+      changeBal(prize, 'Выигрыш в рулетке');
+      show('rouRes','win','🎉 ' + (isZero ? 'ЗЕРО!' : (isRed ? 'Красное ' : 'Чёрное ') + num.textContent) + '! +' + fmt(prize) + ' демо ₸');
+    } else {
+      show('rouRes','lose','💀 ' + (isZero ? 'Зеро...' : (isRed ? 'Красное' : 'Чёрное') + ' ' + num.textContent) + '. Минус ' + fmt(bet) + ' ₸');
+    }
+  }, 3500);
+}
+
+// ===== SLOTS =====
+const SYM = ['🍒','⭐','💜','7️⃣','💎'];
+const PAY = { '💎':50, '7️⃣':25, '⭐':10, '🍒':5, '💜':4 };
+function spinSlots(){
+  const bet = takeBet('slotBet'); if (!bet) return;
+  [1,2,3].forEach(i => document.getElementById('r'+i).classList.add('spin'));
+  const iv = setInterval(() => {
+    [1,2,3].forEach(i => document.getElementById('r'+i).textContent = SYM[Math.floor(Math.random()*5)]);
+  }, 70);
+  setTimeout(() => {
+    clearInterval(iv);
+    const w = [Math.random(),Math.random(),Math.random()];
+    // небольшое снисхождение: иногда подтягиваем третий барабан
+    let s1 = SYM[Math.floor(w[0]*5)], s2 = SYM[Math.floor(w[1]*5)], s3 = SYM[Math.floor(w[2]*5)];
+    if (Math.random() < 0.12 && s1 === s2) s3 = s1;
+    document.getElementById('r1').textContent = s1;
+    document.getElementById('r2').textContent = s2;
+    document.getElementById('r3').textContent = s3;
+    [1,2,3].forEach(i => document.getElementById('r'+i).classList.remove('spin'));
+    if (s1 === s2 && s2 === s3) {
+      const prize = bet * PAY[s1];
+      changeBal(prize, 'ДЖЕКПОТ в слотах ' + s1 + s1 + s1);
+      show('slotRes','win','🎉 ДЖЕКПОТ ' + s1 + s1 + s1 + '! +' + fmt(prize) + ' демо ₸ (x' + PAY[s1] + ')');
+    } else if (s1 === s2 || s2 === s3 || s1 === s3) {
+      const prize = bet; // две одинаковые — возврат ставки
+      changeBal(prize, 'Возврат ставки (пара в слотах)');
+      show('slotRes','info','😐 Пара! Ставка возвращается (' + fmt(prize) + ' ₸)');
+    } else {
+      show('slotRes','lose','💀 Мимо. Барабаны съели ' + fmt(bet) + ' ₸');
+    }
+  }, 1400);
+}
+
+refreshBal();
+</script>
+</body>
+</html>
