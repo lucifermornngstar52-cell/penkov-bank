@@ -514,6 +514,9 @@ function renderCabinet(){
     return `<div class="op-row"><span>${h.op}</span>
      <span><time>${new Date(h.date).toLocaleDateString('ru')} ${new Date(h.date).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})}</time> <b class="${neg?'minus':'plus'}">${neg?'−':'+'}${new Intl.NumberFormat('ru-RU').format(Math.abs(h.sum))} ₸</b></span></div>`;
   }).join('');
+  const loansHtml = (a.loans || []).map(l => `
+    <div class="op-row"><span>${l.type === 'mortgage' ? '🏠 Ипотека' : '💰 Кредит'} · ${fmt(l.sum)} ₸ · платёж ${fmt(l.payment)} ₸</span>
+      <span>осталось <b style="color:#f87171">${fmt(l.debt)} ₸</b></span></div>`).join('');
   document.getElementById('cabinet').innerHTML = `
     <div class="acct-card">
       <div class="acct-top">
@@ -527,6 +530,11 @@ function renderCabinet(){
         <button class="btn btn-ghost" onclick="closeAccountForever()">🗑 Закрыть счёт</button>
       </div>
     </div>
+    ${(a.loans || []).length ? `<div class="tile" style="padding:24px 26px;border-color:rgba(239,68,68,.3)">
+      <h3 style="font-size:15px;margin-bottom:6px">💳 Активные кредиты</h3>
+      ${loansHtml}
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:14px" onclick="openLoan('repay')">Оплатить кредит</button>
+    </div>` : ''}
     <div class="tile" style="padding:24px 26px">
       <h3 style="font-size:15px;margin-bottom:6px">Операции</h3>
       ${hist || '<p style="color:var(--text2);font-size:13px">Пока пусто</p>'}
@@ -685,30 +693,42 @@ function openLoan(mode){
   loanMode = mode;
   document.getElementById('loanFormWrap').style.display = 'block';
   document.getElementById('loanOk').style.display = 'none';
-  const T = {credit:['Взять кредит','Кредит наличными · до 20 000 000 ₸ · от 12% годовых',12,60,5_000_000,20000000],
-             mortgage:['Взять ипотеку','Ипотека · от 8% годовых · до 25 лет',8,300,20_000_000,200_000_000],
-             repay:['Оплатить кредит','Погашение кредита PenkovBank',null,null,null,null]}[mode];
+  const T = {credit:['Взять кредит','Кредит наличными · 1 000 – 5 000 000 ₸ · комиссия 15%'],
+             mortgage:['Взять ипотеку','Ипотека · 10 000 – 100 000 000 ₸ · комиссия 8%'],
+             repay:['Оплатить кредит','Погашение кредита PenkovBank — равные платежи, досрочно без штрафов']}[mode];
   document.getElementById('loanTitle').textContent = T[0];
   document.getElementById('loanSub').textContent = T[1];
   const F = document.getElementById('loanFields');
   if (mode === 'repay') {
-    F.innerHTML = `
-      <label>Номер кредитного договора</label>
-      <input type="text" id="lpNum" placeholder="PB-2026-000000" style="letter-spacing:1px">
-      <label>Сумма платежа</label>
-      <input type="number" id="lpSum" placeholder="Например: 50 000" min="1">
-      <label>Карта списания</label>
-      <input type="text" id="lpCard" placeholder="5300 •••• •••• 7777" style="letter-spacing:1px">
-      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:22px" onclick="repayLoan()">Оплатить</button>`;
+    const acc = getAcct();
+    const loans = acc ? (acc.loans || []) : [];
+    if (!acc) {
+      F.innerHTML = '<p style="color:var(--text2);font-size:14px">Сначала открой демо счёт в разделе «Личный кабинет» 🙂</p>';
+    } else if (!loans.length) {
+      F.innerHTML = '<p style="color:var(--text2);font-size:14px">Активных кредитов нет — душа и баланс чисты 😌</p>';
+    } else {
+      F.innerHTML = loans.map((l, i) => `
+        <div style="padding:14px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <b>${l.type === 'mortgage' ? '🏠 Ипотека' : '💰 Кредит'} · ${fmt(l.sum)} ₸</b>
+            <span style="color:var(--text2);font-size:13px">платёж ${fmt(l.payment)} ₸</span>
+          </div>
+          <div style="color:var(--text2);font-size:13px;margin:8px 0 12px">Осталось вернуть: <b style="color:#f87171">${fmt(l.debt)} ₸</b> из ${fmt(Math.ceil(l.sum * (1 + (l.type === 'mortgage' ? 0.08 : 0.15))))} ₸</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="payLoan(${i},'pay')">Оплатить ${fmt(Math.min(l.payment, l.debt))} ₸</button>
+            <button class="btn btn-ghost" onclick="payLoan(${i},'full')">Закрыть досрочно (${fmt(l.debt)} ₸)</button>
+          </div>
+        </div>`).join('');
+    }
   } else {
     const isMort = mode === 'mortgage';
     F.innerHTML = `
       <label>Сумма ${isMort ? 'недвижимости' : 'кредита'}</label>
       <input type="number" id="lsSum" value="${isMort ? 20000000 : 5000000}" min="100000">
       <div class="loan-sum" id="sumQuick"></div>
-      <label>Срок, ${isMort ? 'лет' : 'месяцев'}</label>
-      <input type="number" id="lsTerm" value="${isMort ? 15 : 36}" min="${isMort ? 1 : 3}" max="${isMort ? 25 : 84}">
-      <div class="loan-result"><span>Ежемесячный платёж (аннуитет)</span><b id="lsPay">—</b>
+      <label>Срок — количество платежей</label>
+      <input type="number" id="lsTerm" value="${isMort ? 24 : 12}" min="1" max="60">
+      <div class="loan-result"><span>Платёж (равными частями)</span><b id="lsPay">—</b>
       <span id="lsTotal" style="display:block;margin-top:6px"></span></div>
       <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:20px" onclick="applyLoan()">Оформить заявку</button>`;
     const sums = isMort ? [15000000,20000000,30000000,50000000] : [500000,1000000,3000000,5000000];
@@ -720,26 +740,53 @@ function openLoan(mode){
 }
 function calcLoan(){
   const sum = +document.getElementById('lsSum').value || 0;
-  const term = +document.getElementById('lsTerm').value || 1;
-  const rate = (loanMode === 'mortgage' ? 8 : 12) / 100 / 12;
-  const n = loanMode === 'mortgage' ? term * 12 : term;
-  const pay = rate ? sum * rate * Math.pow(1+rate, n) / (Math.pow(1+rate, n) - 1) : sum / n;
-  document.getElementById('lsPay').textContent = fmt(pay);
-  document.getElementById('lsTotal').textContent = 'Всего за ' + (loanMode==='mortgage'? term + ' лет' : term + ' мес') + ': ' + fmt(pay * n) + ' · переплата ' + fmt(pay*n - sum);
+  const term = Math.max(1, +document.getElementById('lsTerm').value || 1);
+  const fee = loanMode === 'mortgage' ? 0.08 : 0.15;
+  const debt = Math.ceil(sum * (1 + fee));
+  const payment = Math.ceil(debt / term);
+  document.getElementById('lsPay').textContent = fmt(payment);
+  document.getElementById('lsTotal').textContent = 'Всего вернуть ' + fmt(debt) + ' ₸ за ' + term + ' пл. · комиссия ' + Math.round(fee*100) + '% = ' + fmt(debt - sum) + ' ₸';
 }
 function applyLoan(){
-  const sum = +document.getElementById('lsSum').value;
-  const pay = document.getElementById('lsPay').textContent;
-  showOk('Заявка принята! 🎉',
-    'На сумму ' + fmt(sum) + ' с платежом ' + pay + ' в месяц.<br>Решение придёт в SMS и push — обычно за 2 минуты.<br>Спасиб за доверие, клиент PenkovBank 💜');
+  const acc = getAcct();
+  if (!acc) {
+    alert('Сначала открой демо счёт в разделе «Личный кабинет» 🙂');
+    document.getElementById('loanOverlay').classList.remove('active');
+    location.hash = '#account'; return;
+  }
+  const isMort = loanMode === 'mortgage';
+  const fee = isMort ? 0.08 : 0.15;
+  const min = isMort ? 10000 : 1000, max = isMort ? 100000000 : 5000000;
+  const sum = Math.floor(+document.getElementById('lsSum').value);
+  const term = Math.min(60, Math.max(1, Math.floor(+document.getElementById('lsTerm').value) || 1));
+  if (!sum || sum < min) { alert('Минимальная сумма: ' + fmt(min) + ' ₸'); return; }
+  if (sum > max) { alert('Максимальная сумма: ' + fmt(max) + ' ₸'); return; }
+  if (!acc.loans) acc.loans = [];
+  if (acc.loans.some(l => l.type === loanMode)) {
+    alert(isMort ? 'У тебя уже есть активная ипотека — сначала погаси её.' : 'У тебя уже есть активный кредит — сначала погаси его.');
+    return;
+  }
+  const debt = Math.ceil(sum * (1 + fee));
+  const payment = Math.ceil(debt / term);
+  acc.loans.push({ id: Date.now(), type: loanMode, sum, debt, payment, term, date: Date.now() });
+  acc.balance += sum;
+  acc.history.push({ op: (isMort ? '🏠 Ипотека выдана' : '💰 Кредит выдан') + ' на ' + term + ' пл.', sum, date: Date.now() });
+  saveAcct(acc); renderCabinet();
+  showOk((isMort ? 'Ипотека' : 'Кредит') + ' одобрен! 🎉',
+    'На счёт зачислено <b>' + fmt(sum) + ' демо ₸</b>.<br>Вернуть: ' + fmt(debt) + ' ₸ (' + fmt(payment) + ' ₸ × ' + term +
+    ' платежей, комиссия ' + Math.round(fee*100) + '%).<br>Гасить — кнопкой «Оплатить кредит» в разделе «Кредиты».');
 }
-function repayLoan(){
-  const num = document.getElementById('lpNum').value.trim();
-  const sum = +document.getElementById('lpSum').value;
-  const card = document.getElementById('lpCard').value.trim();
-  if (!num || !sum || !card) { alert('Заполни все три поля 🙂'); return; }
-  showOk('Платёж отправлен!',
-    fmt(sum) + ' по договору ' + num + ' зачислится мгновенно.<br>Чек — в приложении PenkovBank.<br>Кредит гасится, свобода приближается ✨');
+function payLoan(i, mode){
+  const acc = getAcct(); if (!acc) return;
+  const l = (acc.loans || [])[i]; if (!l) return;
+  const amount = mode === 'full' ? l.debt : Math.min(l.payment, l.debt);
+  if (acc.balance < amount) { alert('Недостаточно демо-тенге: нужно ' + fmt(amount) + ' ₸, на счету ' + fmt(acc.balance) + ' ₸'); return; }
+  acc.balance -= amount;
+  l.debt = Math.max(0, l.debt - amount);
+  acc.history.push({ op: 'Платёж по ' + (l.type === 'mortgage' ? 'ипотеке' : 'кредиту') + (l.debt === 0 ? ' — ДОЛГ ЗАКРЫТ 🎉' : ''), sum: -amount, date: Date.now() });
+  if (l.debt === 0) acc.loans = acc.loans.filter(x => x.id !== l.id);
+  saveAcct(acc); renderCabinet();
+  openLoan('repay');
 }
 function showOk(title, text){
   document.getElementById('loanFormWrap').style.display = 'none';
