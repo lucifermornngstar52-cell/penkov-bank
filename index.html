@@ -177,6 +177,16 @@ footer .logo{justify-content:center;margin-bottom:14px}
 .loan-ok .big{font-size:52px;margin-bottom:12px}
 .loan-ok h4{font-size:19px;margin-bottom:8px}
 .loan-ok p{color:var(--text2);font-size:13px;line-height:1.6}
+
+/* ===== LOGGED MODE: только кабинет ===== */
+body.logged section:not(#account){display:none!important}
+body.logged .hero-cta,body.logged .card-showcase,body.logged .tag,body.logged .sub,
+body.logged h1,body.logged .hero-note,body.logged .glow{display:none!important}
+body.logged .hero{min-height:0;padding:96px 6vw 4px}
+body.logged .band,body.logged footer{display:none!important}
+body.logged nav .nav-links{display:none!important}
+.tier-bar{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin:10px 0 6px}
+.tier-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--p),var(--p2));transition:.5s}
 </style>
 </head>
 <body>
@@ -487,6 +497,25 @@ const PLAN_NAMES = {start:'Старт', premium:'Премиум', obsidian:'Obsi
 const CARD_META = {violet:{t:'Violet',e:'💜',p:'start'},nebula:{t:'Nebula',e:'🌌',p:'premium'},obsidian:{t:'Obsidian',e:'🖤',p:'obsidian'}};
 let pendingPlan = null, cardMode = 'obsidian';
 
+/* ===== СТАТУСЫ КАРТЫ ПО БАЛАНСУ ===== */
+const TIERS = [
+  {name:'Violet',   e:'💜', min:0,           grad:'linear-gradient(135deg,#241243,#0f0f1d 60%,#1c1140)', border:'rgba(167,139,250,.35)', glow:'rgba(124,58,237,.25)'},
+  {name:'Silver',   e:'⚪', min:10000,       grad:'linear-gradient(135deg,#3a3f4a,#0f1116 60%,#262b34)', border:'rgba(203,213,225,.45)', glow:'rgba(203,213,225,.18)'},
+  {name:'Gold',     e:'🟡', min:100000,     grad:'linear-gradient(135deg,#5c4210,#17130a 60%,#3a2c0e)', border:'rgba(251,191,36,.5)',  glow:'rgba(251,191,36,.2)'},
+  {name:'Platinum', e:'💠', min:1000000,    grad:'linear-gradient(135deg,#3d4a55,#141a20 60%,#2b3a45)', border:'rgba(226,232,240,.55)', glow:'rgba(226,232,240,.22)'},
+  {name:'Obsidian', e:'🖤', min:10000000,   grad:'linear-gradient(135deg,#0d0d12,#000 60%,#1a1a22)',   border:'rgba(255,255,255,.28)', glow:'rgba(255,255,255,.15)'},
+  {name:'Diamond',  e:'💎', min:100000000,  grad:'linear-gradient(135deg,#0e3a45,#0a1420 60%,#123a5c)', border:'rgba(125,211,252,.6)',  glow:'rgba(125,211,252,.28)'}
+];
+function tierIdx(b){ let i=0; TIERS.forEach((t,k)=>{ if(b>=t.min) i=k; }); return i; }
+function tierOf(b){ return TIERS[tierIdx(b)]; }
+function tierProgress(a){
+  const i = tierIdx(a.balance), t = TIERS[i], n = TIERS[i+1];
+  if (!n) return '<p style="font-size:13px;color:var(--gold);font-weight:700;margin-top:4px">💎 ' + t.name + ' — максимальный статус. Ты — легенда PenkovBank.</p>';
+  const pct = Math.min(100, Math.max(0, Math.round((a.balance - t.min)/(n.min - t.min)*100)));
+  return '<div style="font-size:13px;color:var(--text2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-top:4px"><span>Статус: <b style="color:var(--p2)">' + t.e + ' ' + t.name + '</b></span><span>до ' + n.e + ' ' + n.name + ': <b style="color:var(--text)">' + fmt(Math.max(0, n.min - a.balance)) + ' ₸</b></span></div><div class="tier-bar"><i style="width:' + pct + '%"></i></div>';
+}
+
+
 function pick(t){
   let a = getAcct();
   if (!a) { pendingPlan = t; openAccountModal(); return; }
@@ -595,6 +624,14 @@ async function updateVaultDisplay(){
 
 function renderCabinet(){
   const a = getAcct();
+  document.body.classList.toggle('logged', !!a);
+  const navBtn = document.querySelector('nav .btn');
+  if (navBtn) {
+    if (a) { navBtn.textContent = '💳 Кабинет'; navBtn.setAttribute('href', '#account'); }
+    else { navBtn.textContent = 'Открыть счёт'; navBtn.setAttribute('href', '#tariffs'); }
+  }
+  const shEl = document.querySelector('#account .sec-head p');
+  if (shEl) shEl.textContent = a ? 'Твой счёт, карта и кредиты — всё под рукой.' : 'Счёт, карты и переводы — всё в одном месте. Открой за 5 секунд.';
   document.getElementById('noAccount').style.display = a ? 'none' : 'block';
   document.getElementById('cabinet').style.display = a ? 'block' : 'none';
   if (!a) return;
@@ -604,13 +641,13 @@ function renderCabinet(){
      <span><time>${new Date(h.date).toLocaleDateString('ru')} ${new Date(h.date).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})}</time> <b class="${neg?'minus':'plus'}">${neg?'−':'+'}${new Intl.NumberFormat('ru-RU').format(Math.abs(h.sum))} ₸</b></span></div>`;
   }).join('');
   const planNm = PLAN_NAMES[a.plan || 'start'];
+  const cur = tierOf(a.balance);
   const cardsHtml = (a.cards || []).map(k => {
-    const m = CARD_META[k.type] || CARD_META.obsidian;
     const last4 = k.num.slice(-4);
     return `<div style="text-align:center;margin-bottom:8px">
-      <div class="bank-card flat" style="margin:0 auto 10px">
+      <div class="bank-card flat" style="margin:0 auto 10px;background:${cur.grad};border:1px solid ${cur.border};box-shadow:0 14px 40px ${cur.glow}">
         <div class="chip"></div>
-        <div class="brand">PENKOV<span style="color:var(--text2)">BANK</span></div>
+        <div class="brand" style="font-size:12px;letter-spacing:1.5px">${cur.e} ${cur.name.toUpperCase()}</div>
         <div class="num">5300 •••• •••• ${last4}</div>
         <div class="row">
           <div class="holder">Владелец<b>${k.holder}</b></div>
@@ -618,7 +655,7 @@ function renderCabinet(){
         </div>
         <div class="mc"><i></i><i></i></div>
       </div>
-      <p style="font-size:12.5px;color:var(--text2)">${m.e} ${m.t} · реквизиты: <b style="color:var(--text1)">${k.num}</b> · до ${k.exp} · CVV ${k.cvv}</p>
+      <p style="font-size:12.5px;color:var(--text2)">${cur.e} ${cur.name} · реквизиты: <b style="color:var(--text1)">${k.num}</b> · до ${k.exp} · CVV ${k.cvv}</p>
     </div>`;
   }).join('');
   const loansHtml = (a.loans || []).map(l => l.status === 'pending'
@@ -635,14 +672,21 @@ function renderCabinet(){
       <div class="acct-actions">
         <button class="btn btn-primary" onclick="refreshBalance()">🔄 Обновить баланс</button>
         <button class="btn btn-primary" onclick="openTransferModal()">💸 Перевести</button>
+        <button class="btn btn-primary" onclick="openLoan('credit')">💰 Взять кредит</button>
+        <button class="btn btn-primary" onclick="openLoan('mortgage')">🏠 Ипотека</button>
         <button class="btn btn-ghost" onclick="copyNum()">📋 Скопировать номер счёта</button>
         <button class="btn btn-ghost" onclick="closeAccountForever()">🗑 Закрыть счёт</button>
       </div>
     </div>
     ${(a.cards || []).length ? `<div class="tile" style="padding:24px 26px">
-      <h3 style="font-size:15px;margin-bottom:14px">💳 Мои карты</h3>
+      <h3 style="font-size:15px;margin-bottom:14px">💳 Моя карта · ${cur.e} ${cur.name}</h3>
       ${cardsHtml}
-      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:10px" onclick="location.hash='#cards'">Выпустить ещё одну</button>
+      ${tierProgress(a)}
+    </div>` : ''}
+    ${!(a.cards || []).length ? `<div class="tile" style="padding:24px 26px">
+      <h3 style="font-size:15px;margin-bottom:14px">💳 Статус карты</h3>
+      <p style="font-size:14px;color:var(--text2)">Выпусти карту — её статус растёт вместе с балансом: Violet → Silver → Gold → Platinum → Obsidian → Diamond 💎</p>
+      ${tierProgress(a)}
     </div>` : ''}
     ${(a.loans || []).length ? `<div class="tile" style="padding:24px 26px;border-color:rgba(239,68,68,.3)">
       <h3 style="font-size:15px;margin-bottom:6px">💳 Активные кредиты</h3>
@@ -769,7 +813,13 @@ async function refreshBalance(){
     freshTr.forEach(t => { total += t.sum; a.claimedTr.push(t.id);
       a.history.push({ op: 'Перевод от ' + t.fromName + ' (' + t.from + ')' + (t.note ? ' «' + t.note + '»':''), sum: t.sum, date: Date.now() }); });
     if (freshTr.length) parts.push('переводы: ' + freshTr.reduce((s,t)=>s+t.sum,0) + ' ₸');
+    const tBefore = tierIdx(a.balance), tAfter = tierIdx(a.balance + total);
     a.balance += total;
+    if (tAfter > tBefore) {
+      const t = TIERS[tAfter];
+      a.history.push({ op: t.e + ' Карта повышена до статуса ' + t.name + '!', sum: 0, date: Date.now() });
+      parts.push('карта повышена: ' + t.e + ' ' + t.name + ' 🎉');
+    }
     if (rejected.length) parts.push('отклонено заявок: ' + rejected.length + ' 😔');
     rejected.forEach(l => a.history.push({ op: 'Заявка на ' + (l.type === 'mortgage' ? 'ипотеку' : 'кредит') + ' отклонена', sum: 0, date: Date.now() }));
     saveAcct(a); renderCabinet();
@@ -889,7 +939,9 @@ function payLoan(i, mode){
   const l = (acc.loans || [])[i]; if (!l) return;
   const amount = mode === 'full' ? l.debt : Math.min(l.payment, l.debt);
   if (acc.balance < amount) { alert('Недостаточно средств: нужно ' + fmt(amount) + ' ₸, на счету ' + fmt(acc.balance) + ' ₸'); return; }
+  const tB = tierIdx(acc.balance), tA = tierIdx(acc.balance - amount);
   acc.balance -= amount;
+  if (tA < tB) acc.history.push({ op: TIERS[tA].e + ' Статус карты понижен: ' + TIERS[tB].name + ' → ' + TIERS[tA].name, sum: 0, date: Date.now() });
   l.debt = Math.max(0, l.debt - amount);
   acc.history.push({ op: 'Платёж по ' + (l.type === 'mortgage' ? 'ипотеке' : 'кредиту') + (l.debt === 0 ? ' — ДОЛГ ЗАКРЫТ 🎉' : ''), sum: -amount, date: Date.now() });
   if (l.debt === 0) acc.loans = acc.loans.filter(x => x.id !== l.id);
