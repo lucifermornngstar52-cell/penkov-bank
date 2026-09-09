@@ -107,6 +107,27 @@ section{padding:90px 6vw;max-width:1200px;margin:0 auto}
 .tariff li::before{content:'✓';color:var(--ok);font-weight:700}
 .tariff .btn{justify-content:center}
 
+/* cabinet */
+.acct-card{background:linear-gradient(135deg,rgba(124,58,237,.16),rgba(76,29,149,.06));border:1px solid var(--line);
+  border-radius:24px;padding:30px;margin-bottom:20px}
+.acct-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;align-items:flex-start}
+.acct-num{font-size:13px;color:var(--text2)}
+.acct-num b{display:block;font-size:22px;letter-spacing:2px;color:#fff;margin-top:4px}
+.acct-bal{text-align:right}
+.acct-bal span{font-size:12px;color:var(--text2)}
+.acct-bal b{display:block;font-size:clamp(28px,5vw,42px);font-weight:800;
+  background:linear-gradient(135deg,#fff,var(--p2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.acct-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.op-row{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line);font-size:14px}
+.op-row:last-child{border-bottom:none}
+.op-row .plus{color:var(--ok);font-weight:700}
+.op-row time{color:var(--text2);font-size:12px}
+/* admin */
+.admin-toggle{cursor:pointer;opacity:.45;font-size:12px;margin-top:10px;transition:.2s}
+.admin-toggle:hover{opacity:1}
+.admin-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.admin-row input{flex:1;min-width:160px}
+
 /* faq */
 .faq details{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 24px;margin-bottom:12px;cursor:pointer}
 .faq summary{font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center}
@@ -163,6 +184,7 @@ footer .logo{justify-content:center;margin-bottom:14px}
     <a href="#credits">Кредиты</a>
     <a href="#features">Возможности</a>
     <a href="#tariffs">Тарифы</a>
+    <a href="#account">Кабинет</a>
     <a href="#faq">FAQ</a>
   </div>
   <a href="#tariffs" class="btn btn-primary">Открыть счёт</a>
@@ -339,6 +361,21 @@ footer .logo{justify-content:center;margin-bottom:14px}
   </div>
 </section>
 
+
+<section id="account">
+  <div class="sec-head">
+    <h2>Личный кабинет</h2>
+    <p>Демо-счёт с демо-тенге: открой за 5 секунд и обмани систему (легально).</p>
+  </div>
+  <div id="noAccount" class="tile" style="text-align:center;padding:50px 30px">
+    <div style="font-size:44px;margin-bottom:14px">🧾</div>
+    <h3 style="margin-bottom:8px">У тебя ещё нет демо-счёта</h3>
+    <p style="max-width:420px;margin:0 auto 24px">Открой счёт PenkovBank — получи номер и приветственный бонус 1 000 демо ₸. Реальными деньгами не является, гордостью — да.</p>
+    <button class="btn btn-primary btn-lg" onclick="openAccountModal()">🚀 Открыть демо счёт</button>
+  </div>
+  <div id="cabinet" style="display:none"></div>
+</section>
+
 <section id="faq" class="faq">
   <div class="sec-head">
     <h2>Частые вопросы</h2>
@@ -371,7 +408,43 @@ footer .logo{justify-content:center;margin-bottom:14px}
   <div class="logo"><span class="logo-badge">П</span>PenkovBank</div>
   <div>© 2026 PenkovBank. Сделано с 💜 и без единого филиала.</div>
   <div style="margin-top:6px;opacity:.6">Демонстрационный проект. Банковская лицензия — дело времени.</div>
+  <div class="admin-toggle" onclick="openAdminModal()">⚙︎ Панель разработчика</div>
 </footer>
+
+<div class="loan-overlay" id="acctOverlay" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="loan-box">
+    <button class="loan-close" onclick="document.getElementById('acctOverlay').classList.remove('active')">×</button>
+    <h3>Открыть демо счёт</h3>
+    <div class="sub">30 секунд — и ты клиент PenkovBank (демо)</div>
+    <label>Твоё имя</label>
+    <input type="text" id="acName" placeholder="Как тебя зовут?">
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:22px" onclick="createAccount()">Открыть счёт</button>
+  </div>
+</div>
+
+<div class="loan-overlay" id="adminOverlay" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="loan-box">
+    <button class="loan-close" onclick="document.getElementById('adminOverlay').classList.remove('active')">×</button>
+    <div id="adminLogin">
+      <h3>Панель разработчика</h3>
+      <div class="sub">Только для Никиты. Остальным — приятного просмотра.</div>
+      <label>Пароль</label>
+      <input type="password" id="adminPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')tryAdmin()">
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:22px" onclick="tryAdmin()">Войти</button>
+    </div>
+    <div id="adminPanel" style="display:none">
+      <h3>Начисление демо-тенге</h3>
+      <div class="sub">Введи номер счёта клиента и сумму — средства придут после «Обновить баланс» в кабинете.</div>
+      <div class="admin-row">
+        <input type="text" id="admNum" placeholder="PB-000000000000" style="letter-spacing:1px">
+        <input type="number" id="admSum" placeholder="Сумма, ₸" min="1">
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="creditAccount()">⚡ Начислить</button>
+      <p id="admMsg" style="font-size:13px;margin-top:12px;color:var(--text2)"></p>
+      <div id="admLog" style="margin-top:16px"></div>
+    </div>
+  </div>
+</div>
 
 <div class="loan-overlay" id="loanOverlay" onclick="if(event.target===this)closeLoan()">
   <div class="loan-box">
@@ -395,6 +468,141 @@ function pick(t){
   b.disabled=true; b.style.opacity=.85;
   setTimeout(()=>{b.textContent='Спасибо! Мы на связи 🚀';},1800);
 }
+// ===== DEMO ACCOUNTS =====
+const GH_API = 'https://api.github.com/repos/lucifermornngstar52-cell/penkov-bank/contents/credits.json';
+const getAcct = () => JSON.parse(localStorage.getItem('pb_account') || 'null');
+const saveAcct = a => localStorage.setItem('pb_account', JSON.stringify(a));
+
+function openAccountModal(){ document.getElementById('acctOverlay').classList.add('active'); }
+
+function createAccount(){
+  const name = document.getElementById('acName').value.trim();
+  if (!name) { alert('Введи имя 🙂'); return; }
+  const num = 'PB-' + String(Math.floor(100000000000 + Math.random() * 899999999999));
+  saveAcct({ num, name, balance: 1000, claimed: [], history: [
+    { op: 'Приветственный бонус', sum: 1000, date: Date.now() }
+  ]});
+  document.getElementById('acctOverlay').classList.remove('active');
+  renderCabinet();
+  document.getElementById('account').scrollIntoView({behavior:'smooth'});
+}
+
+function renderCabinet(){
+  const a = getAcct();
+  document.getElementById('noAccount').style.display = a ? 'none' : 'block';
+  document.getElementById('cabinet').style.display = a ? 'block' : 'none';
+  if (!a) return;
+  const hist = (a.history || []).slice(-8).reverse().map(h =>
+    `<div class="op-row"><span>${h.op}</span>
+     <span><time>${new Date(h.date).toLocaleDateString('ru')} ${new Date(h.date).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})}</time> <b class="plus">+${new Intl.NumberFormat('ru-RU').format(h.sum)} ₸</b></span></div>`).join('');
+  document.getElementById('cabinet').innerHTML = `
+    <div class="acct-card">
+      <div class="acct-top">
+        <div class="acct-num">Демо-счёт<b>${a.num}</b><span style="font-size:12px;color:var(--text2)">Владелец: ${a.name}</span></div>
+        <div class="acct-bal"><span>Баланс</span><b>${new Intl.NumberFormat('ru-RU').format(a.balance)} ₸</b></div>
+      </div>
+      <div class="acct-actions">
+        <button class="btn btn-primary" onclick="refreshBalance()">🔄 Обновить баланс</button>
+        <button class="btn btn-ghost" onclick="copyNum()">📋 Скопировать номер счёта</button>
+        <button class="btn btn-ghost" onclick="closeAccountForever()">🗑 Закрыть счёт</button>
+      </div>
+    </div>
+    <div class="tile" style="padding:24px 26px">
+      <h3 style="font-size:15px;margin-bottom:6px">Операции</h3>
+      ${hist || '<p style="color:var(--text2);font-size:13px">Пока пусто</p>'}
+    </div>`;
+}
+
+function copyNum(){
+  navigator.clipboard.writeText(getAcct().num);
+  alert('Номер скопирован: ' + getAcct().num + ' — отправь его Никите для начисления демо-тенге 😎');
+}
+
+async function fetchCredits(){
+  const r = await fetch(GH_API + '?t=' + Date.now());
+  if (!r.ok) return { sha: null, credits: [] };
+  const d = await r.json();
+  const content = d.content ? JSON.parse(atob(d.content.replace(/\n/g, ''))) : { credits: [] };
+  return { sha: d.sha, credits: content.credits || [] };
+}
+
+async function refreshBalance(){
+  try {
+    const a = getAcct(); if (!a) return;
+    const { credits } = await fetchCredits();
+    const fresh = credits.filter(c => c.num === a.num && !(a.claimed || []).includes(c.id));
+    if (!fresh.length) { alert('Новых начислений нет. Как только Никита начислит — жми эту кнопку.'); return; }
+    let total = 0;
+    fresh.forEach(c => { total += c.sum; a.claimed.push(c.id);
+      a.history.push({ op: 'Начисление от PenkovBank: «' + (c.note || 'демо-кредит') + '»', sum: c.sum, date: Date.now() }); });
+    a.balance += total;
+    saveAcct(a); renderCabinet();
+    alert('🎉 Начислено ' + new Intl.NumberFormat('ru-RU').format(total) + ' демо ₸!');
+  } catch(e) { alert('Ошибка соединения: ' + e.message); }
+}
+
+function closeAccountForever(){
+  if (!confirm('Закрыть демо-счёт? Баланс сгорит в демо-пламени.')) return;
+  localStorage.removeItem('pb_account');
+  renderCabinet();
+}
+
+// ===== ADMIN =====
+const ADMIN_PASS = 'penkov2026';
+function openAdminModal(){
+  document.getElementById('adminOverlay').classList.add('active');
+  const ok = sessionStorage.getItem('pb_admin') === '1';
+  document.getElementById('adminLogin').style.display = ok ? 'none' : 'block';
+  document.getElementById('adminPanel').style.display = ok ? 'block' : 'none';
+  if (ok) renderAdminLog();
+}
+function tryAdmin(){
+  if (document.getElementById('adminPass').value === ADMIN_PASS) {
+    sessionStorage.setItem('pb_admin', '1');
+    openAdminModal();
+  } else alert('Пароль неверный 😏');
+}
+async function renderAdminLog(){
+  try {
+    const { credits } = await fetchCredits();
+    document.getElementById('admLog').innerHTML = credits.slice(-10).reverse().map(c =>
+      `<div class="op-row"><span>${c.num} · <b>${new Intl.NumberFormat('ru-RU').format(c.sum)} ₸</b>${c.note ? ' · ' + c.note : ''}</span>
+       <time>${new Date(c.date).toLocaleDateString('ru')}</time></div>`).join('') || '<p style="color:var(--text2);font-size:13px">Начислений пока нет</p>';
+  } catch(e) {}
+}
+async function creditAccount(){
+  const num = document.getElementById('admNum').value.trim().toUpperCase();
+  const sum = +document.getElementById('admSum').value;
+  const msg = document.getElementById('admMsg');
+  if (!num || !sum || sum <= 0) { msg.textContent = 'Заполни номер счёта и сумму'; msg.style.color = '#f87171'; return; }
+  if (!num.startsWith('PB-')) { msg.textContent = 'Номер должен начинаться с PB-'; msg.style.color = '#f87171'; return; }
+  msg.textContent = '⏳ Отправляем...'; msg.style.color = 'var(--text2)';
+  try {
+    const token = prompt('Вставь GitHub token (fine-grained, с правами на penkov-bank):');
+    if (!token) { msg.textContent = 'Без токена не начислить'; msg.style.color = '#f87171'; return; }
+    const { sha, credits } = await fetchCredits();
+    const entry = { id: 'c' + Date.now(), num, sum, note: 'начисление', date: Date.now() };
+    credits.push(entry);
+    const put = await fetch(GH_API, {
+      method: 'PUT',
+      headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'credit ' + num + ' ' + sum + ' ₸',
+        content: btoa(unescape(encodeURIComponent(JSON.stringify({ credits }, null, 2)))), sha })
+    });
+    if (put.ok) {
+      msg.innerHTML = '✅ Начислено <b>' + new Intl.NumberFormat('ru-RU').format(sum) + ' демо ₸</b> на ' + num +
+        '. Клиент нажмёт «Обновить баланс» — и деньги придут.';
+      msg.style.color = 'var(--ok)';
+      document.getElementById('admNum').value = ''; document.getElementById('admSum').value = '';
+      renderAdminLog();
+    } else {
+      msg.textContent = 'GitHub отклонил: ' + put.status + ' (проверь токен)'; msg.style.color = '#f87171';
+    }
+  } catch(e) { msg.textContent = 'Ошибка: ' + e.message; msg.style.color = '#f87171'; }
+}
+
+renderCabinet();
+
 // ===== LOAN CALC / MODALS =====
 const fmt = n => new Intl.NumberFormat('ru-RU').format(Math.round(n)) + ' ₸';
 let loanMode = 'credit';
