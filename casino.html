@@ -92,6 +92,20 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
 
 footer{margin-top:44px;text-align:center;color:var(--text2);font-size:12px;line-height:1.8}
 footer a:hover{color:var(--p2)}
+/* poker */
+.poker-cards{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+.pcard{width:54px;height:76px;border-radius:10px;background:#fff;color:#111;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;font-weight:800;font-size:19px;box-shadow:0 4px 14px rgba(0,0,0,.4);
+  cursor:default;transition:.15s;user-select:none}
+.pcard small{font-size:15px}
+.pcard.red{color:#dc2626}
+.pcard.back{background:linear-gradient(135deg,var(--p),#4c1d95);color:rgba(255,255,255,.35);cursor:default}
+.pcard.sel{outline:3px solid var(--gold);transform:translateY(-10px);cursor:pointer}
+.pcard.pickable{cursor:pointer}
+.pcard.pickable:hover{transform:translateY(-5px)}
+.poker-label{font-size:11px;color:var(--text2);text-align:center;margin-bottom:4px}
+.poker-btns{display:flex;gap:8px;margin-top:4px}
+.poker-btns .btn{flex:1;justify-content:center;padding:10px 8px;font-size:13px}
 .no-acct{border-radius:20px;border:1px solid var(--gold);background:rgba(245,158,11,.08);padding:26px;text-align:center}
 .no-acct h2{font-size:22px;margin-bottom:10px}
 .no-acct p{color:var(--text2);font-size:14px;margin-bottom:18px}
@@ -165,6 +179,24 @@ footer a:hover{color:var(--p2)}
       <p style="text-align:center;font-size:11px;color:var(--text2);margin-bottom:14px">💎 x50 · 7️⃣ x25 · ⭐ x10 · 🍒 x5 · 💜 x4</p>
       <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="spinSlots()">Крутить барабаны</button>
       <div class="result" id="slotRes"></div>
+
+    <!-- POKER -->
+    <div class="tile" style="grid-column:1/-1">
+      <h3>🃏 Покер <span style="font-size:12px;color:var(--text2)">пятикарточный дро · против дилера</span></h3>
+      <div class="poker-label">Дилер</div>
+      <div class="poker-cards" id="dealerCards"></div>
+      <div class="poker-label">Твоя рука — кликни по картам, чтобы отдать в обмен (до 3)</div>
+      <div class="poker-cards" id="playerCards"></div>
+      <div class="bet-row"><input type="number" id="pokBet" value="100" min="1"></div>
+      <div class="quick">
+        <button onclick="setBet('pokBet',100)">+100</button><button onclick="setBet('pokBet',500)">+500</button>
+        <button onclick="setBet('pokBet',1000)">+1 000</button><button onclick="allIn('pokBet')">ВСЁ НА КОН 🤠</button>
+      </div>
+      <div class="poker-btns">
+        <button class="btn btn-primary" id="pokMain" onclick="pokMain()">🃏 Сдать карты</button>
+        <button class="btn btn-ghost" id="pokSkip" style="display:none" onclick="pokExchange(0)">Оставить как есть</button>
+      </div>
+      <div class="result" id="pokRes"></div>
     </div>
   </div>
 
@@ -194,7 +226,111 @@ function changeBal(delta, op){
   const a = getAcct(); if (!a) return false;
   a.balance += delta;
   if (op) a.history.push({ op, sum: Math.abs(delta), date: Date.now() });
-  saveAcct(a); refreshBal(); return true;
+  saveAcct(a); // ===== POKER (5-card draw vs dealer) =====
+const SUITS = ['♠','♥','♦','♣'], RED = {1:0,3:0}; // ♦(2nd idx 3?) — see mapping below
+const RANKS = ['2','3','4','5','6','7','8','9','10','В','Д','К','A'];
+const HAND_NAMES = ['Старшая карта','Пара','Две пары','Сет','Стрит','Флеш','Фулл-хаус','Каре','Стрит-флеш','Роял-флеш'];
+let pokDeck = [], pokPlayer = [], pokDealer = [], pokPhase = 'idle', pokSel = new Set(), pokAnte = 0;
+
+function pokNewDeck(){
+  const d = [];
+  for (let s = 0; s < 4; s++) for (let r = 2; r <= 14; r++) d.push({ r, s });
+  for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; }
+  return d;
+}
+function cardHtml(c, hidden, pickable, sel){
+  if (hidden) return '<div class="pcard back">?</div>';
+  const red = (c.s === 1 || c.s === 3);
+  const rank = RANKS[c.r - 2];
+  return `<div class="pcard ${red?'red':''} ${pickable?'pickable':''} ${sel?'sel':''}"
+    ${pickable?`onclick="pokToggle(${c.r},${c.s})"`:''}>${rank}<small>${SUITS[c.s]}</small></div>`;
+}
+function pokToggle(r, s){
+  const key = r + '-' + s;
+  if (pokPhase !== 'exchange') return;
+  if (pokSel.has(key)) pokSel.delete(key);
+  else if (pokSel.size < 3) pokSel.add(key);
+  pokRender();
+}
+function pokRender(revealDealer){
+  document.getElementById('dealerCards').innerHTML = pokDealer.map(c => cardHtml(c, !revealDealer, false, false)).join('');
+  document.getElementById('playerCards').innerHTML = pokPlayer.map(c => cardHtml(c, false, pokPhase === 'exchange', pokSel.has(c.r + '-' + c.s))).join('');
+}
+function evalHand(cards){
+  const rs = cards.map(c => c.r).sort((a, b) => b - a);
+  const counts = {}; rs.forEach(r => counts[r] = (counts[r] || 0) + 1);
+  const groups = Object.keys(counts).map(r => ({ r: +r, c: counts[r] })).sort((a, b) => b.c - a.c || b.r - a.r);
+  const flush = cards.every(c => c.s === cards[0].s);
+  const uniq = [...new Set(rs)].sort((a, b) => b - a);
+  let straight = false, high = uniq[0] || 0;
+  if (uniq.length === 5) {
+    if (uniq[0] - uniq[4] === 4) straight = true;
+    if (uniq[0] === 14 && uniq[1] === 5 && uniq[4] === 2) { straight = true; high = 5; }
+  }
+  let cat;
+  if (straight && flush) cat = (high === 14 ? 9 : 8);
+  else if (groups[0].c === 4) cat = 7;
+  else if (groups[0].c === 3 && groups[1] && groups[1].c === 2) cat = 6;
+  else if (flush) cat = 5;
+  else if (straight) cat = 4;
+  else if (groups[0].c === 3) cat = 3;
+  else if (groups[0].c === 2 && groups[1] && groups[1].c === 2) cat = 2;
+  else if (groups[0].c === 2) cat = 1;
+  else cat = 0;
+  return { cat, vec: [cat, ...groups.flatMap(g => [g.c, g.r])], name: HAND_NAMES[cat] };
+}
+function cmpHands(a, b){
+  for (let i = 0; i < Math.max(a.vec.length, b.vec.length); i++) {
+    const d = (a.vec[i] || 0) - (b.vec[i] || 0);
+    if (d) return d;
+  }
+  return 0;
+}
+function pokMain(){
+  if (pokPhase === 'exchange') { pokExchange(pokSel.size); return; }
+  const bet = takeBet('pokBet'); if (!bet) return;
+  pokAnte = bet; pokDeck = pokNewDeck();
+  pokPlayer = pokDeck.splice(0, 5); pokDealer = pokDeck.splice(0, 5);
+  pokSel = new Set(); pokPhase = 'exchange';
+  pokRender(false);
+  document.getElementById('pokMain').textContent = '🔄 Обменять выбранные';
+  document.getElementById('pokSkip').style.display = 'inline-flex';
+  show('pokRes','info','Обменяй до 3 карт (кликни по ним) или оставь как есть.');
+}
+function pokExchange(n){
+  // игрок
+  if (n > 0) {
+    pokPlayer = pokPlayer.filter(c => { const k = c.r + '-' + c.s;
+      if (pokSel.has(k)) { pokDeck.push(c); return false; } return true; });
+    while (pokPlayer.length < 5) pokPlayer.push(pokDeck.pop());
+  }
+  // дилер: если нет пары или лучше — меняет 3 слабейшие
+  const de = evalHand(pokDealer);
+  if (de.cat === 0) {
+    const worst = [...pokDealer].sort((a, b) => a.r - b.r).slice(0, 3);
+    pokDealer = pokDealer.filter(c => !worst.includes(c));
+    while (pokDealer.length < 5) pokDealer.push(pokDeck.pop());
+  }
+  // шоудаун
+  pokPhase = 'idle'; pokSel = new Set();
+  pokRender(true);
+  const pe = evalHand(pokPlayer), dee = evalHand(pokDealer);
+  const cmp = cmpHands(pe, dee);
+  document.getElementById('pokMain').textContent = '🃏 Сдать карты';
+  document.getElementById('pokSkip').style.display = 'none';
+  if (cmp > 0) {
+    const prize = pokAnte * 2;
+    changeBal(prize, 'Выигрыш в покере: ' + pe.name);
+    show('pokRes','win',`🎉 Ты: <b>${pe.name}</b> · Дилер: ${dee.name}. Победа! +${fmt(prize)} демо ₸`);
+  } else if (cmp === 0) {
+    changeBal(pokAnte, 'Ничья в покере');
+    show('pokRes','info',`🤝 Оба: <b>${pe.name}</b>. Ставка возвращается.`);
+  } else {
+    show('pokRes','lose',`💀 Ты: ${pe.name} · Дилер: <b>${dee.name}</b>. Дилер забирает ${fmt(pokAnte)} ₸`);
+  }
+}
+
+refreshBal(); return true;
 }
 function takeBet(id){
   const a = getAcct(); if (!a) return null;
@@ -306,6 +442,110 @@ function spinSlots(){
       show('slotRes','lose','💀 Мимо. Барабаны съели ' + fmt(bet) + ' ₸');
     }
   }, 1400);
+}
+
+// ===== POKER (5-card draw vs dealer) =====
+const SUITS = ['♠','♥','♦','♣'], RED = {1:0,3:0}; // ♦(2nd idx 3?) — see mapping below
+const RANKS = ['2','3','4','5','6','7','8','9','10','В','Д','К','A'];
+const HAND_NAMES = ['Старшая карта','Пара','Две пары','Сет','Стрит','Флеш','Фулл-хаус','Каре','Стрит-флеш','Роял-флеш'];
+let pokDeck = [], pokPlayer = [], pokDealer = [], pokPhase = 'idle', pokSel = new Set(), pokAnte = 0;
+
+function pokNewDeck(){
+  const d = [];
+  for (let s = 0; s < 4; s++) for (let r = 2; r <= 14; r++) d.push({ r, s });
+  for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; }
+  return d;
+}
+function cardHtml(c, hidden, pickable, sel){
+  if (hidden) return '<div class="pcard back">?</div>';
+  const red = (c.s === 1 || c.s === 3);
+  const rank = RANKS[c.r - 2];
+  return `<div class="pcard ${red?'red':''} ${pickable?'pickable':''} ${sel?'sel':''}"
+    ${pickable?`onclick="pokToggle(${c.r},${c.s})"`:''}>${rank}<small>${SUITS[c.s]}</small></div>`;
+}
+function pokToggle(r, s){
+  const key = r + '-' + s;
+  if (pokPhase !== 'exchange') return;
+  if (pokSel.has(key)) pokSel.delete(key);
+  else if (pokSel.size < 3) pokSel.add(key);
+  pokRender();
+}
+function pokRender(revealDealer){
+  document.getElementById('dealerCards').innerHTML = pokDealer.map(c => cardHtml(c, !revealDealer, false, false)).join('');
+  document.getElementById('playerCards').innerHTML = pokPlayer.map(c => cardHtml(c, false, pokPhase === 'exchange', pokSel.has(c.r + '-' + c.s))).join('');
+}
+function evalHand(cards){
+  const rs = cards.map(c => c.r).sort((a, b) => b - a);
+  const counts = {}; rs.forEach(r => counts[r] = (counts[r] || 0) + 1);
+  const groups = Object.keys(counts).map(r => ({ r: +r, c: counts[r] })).sort((a, b) => b.c - a.c || b.r - a.r);
+  const flush = cards.every(c => c.s === cards[0].s);
+  const uniq = [...new Set(rs)].sort((a, b) => b - a);
+  let straight = false, high = uniq[0] || 0;
+  if (uniq.length === 5) {
+    if (uniq[0] - uniq[4] === 4) straight = true;
+    if (uniq[0] === 14 && uniq[1] === 5 && uniq[4] === 2) { straight = true; high = 5; }
+  }
+  let cat;
+  if (straight && flush) cat = (high === 14 ? 9 : 8);
+  else if (groups[0].c === 4) cat = 7;
+  else if (groups[0].c === 3 && groups[1] && groups[1].c === 2) cat = 6;
+  else if (flush) cat = 5;
+  else if (straight) cat = 4;
+  else if (groups[0].c === 3) cat = 3;
+  else if (groups[0].c === 2 && groups[1] && groups[1].c === 2) cat = 2;
+  else if (groups[0].c === 2) cat = 1;
+  else cat = 0;
+  return { cat, vec: [cat, ...groups.flatMap(g => [g.c, g.r])], name: HAND_NAMES[cat] };
+}
+function cmpHands(a, b){
+  for (let i = 0; i < Math.max(a.vec.length, b.vec.length); i++) {
+    const d = (a.vec[i] || 0) - (b.vec[i] || 0);
+    if (d) return d;
+  }
+  return 0;
+}
+function pokMain(){
+  if (pokPhase === 'exchange') { pokExchange(pokSel.size); return; }
+  const bet = takeBet('pokBet'); if (!bet) return;
+  pokAnte = bet; pokDeck = pokNewDeck();
+  pokPlayer = pokDeck.splice(0, 5); pokDealer = pokDeck.splice(0, 5);
+  pokSel = new Set(); pokPhase = 'exchange';
+  pokRender(false);
+  document.getElementById('pokMain').textContent = '🔄 Обменять выбранные';
+  document.getElementById('pokSkip').style.display = 'inline-flex';
+  show('pokRes','info','Обменяй до 3 карт (кликни по ним) или оставь как есть.');
+}
+function pokExchange(n){
+  // игрок
+  if (n > 0) {
+    pokPlayer = pokPlayer.filter(c => { const k = c.r + '-' + c.s;
+      if (pokSel.has(k)) { pokDeck.push(c); return false; } return true; });
+    while (pokPlayer.length < 5) pokPlayer.push(pokDeck.pop());
+  }
+  // дилер: если нет пары или лучше — меняет 3 слабейшие
+  const de = evalHand(pokDealer);
+  if (de.cat === 0) {
+    const worst = [...pokDealer].sort((a, b) => a.r - b.r).slice(0, 3);
+    pokDealer = pokDealer.filter(c => !worst.includes(c));
+    while (pokDealer.length < 5) pokDealer.push(pokDeck.pop());
+  }
+  // шоудаун
+  pokPhase = 'idle'; pokSel = new Set();
+  pokRender(true);
+  const pe = evalHand(pokPlayer), dee = evalHand(pokDealer);
+  const cmp = cmpHands(pe, dee);
+  document.getElementById('pokMain').textContent = '🃏 Сдать карты';
+  document.getElementById('pokSkip').style.display = 'none';
+  if (cmp > 0) {
+    const prize = pokAnte * 2;
+    changeBal(prize, 'Выигрыш в покере: ' + pe.name);
+    show('pokRes','win',`🎉 Ты: <b>${pe.name}</b> · Дилер: ${dee.name}. Победа! +${fmt(prize)} демо ₸`);
+  } else if (cmp === 0) {
+    changeBal(pokAnte, 'Ничья в покере');
+    show('pokRes','info',`🤝 Оба: <b>${pe.name}</b>. Ставка возвращается.`);
+  } else {
+    show('pokRes','lose',`💀 Ты: ${pe.name} · Дилер: <b>${dee.name}</b>. Дилер забирает ${fmt(pokAnte)} ₸`);
+  }
 }
 
 refreshBal();
