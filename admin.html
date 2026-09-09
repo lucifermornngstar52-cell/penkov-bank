@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PenkovBank — Панель администратора</title>
+<title>HikariOS Bank — Панель администратора</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%237c3aed'/><text x='50' y='70' font-size='58' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>П</text></svg>">
 <style>
 :root{
@@ -192,7 +192,7 @@ footer .logo{justify-content:center;margin-bottom:14px}
 <body>
 
 <nav>
-  <div class="nav-brand"><span class="nav-logo">П</span> PenkovBank <span style="font-size:12px;color:var(--p2);align-self:center">· Админ</span></div>
+  <div class="nav-brand"><span class="nav-logo">H</span> HikariOS Bank <span style="font-size:12px;color:var(--p2);align-self:center">· Админ</span></div>
   <div class="nav-links"><a href="index.html">← В банк</a></div>
 </nav>
 
@@ -225,7 +225,7 @@ footer .logo{justify-content:center;margin-bottom:14px}
   </div>
 
   <div class="tile" style="padding:24px 26px;margin-top:22px">
-    <h3 style="font-size:15px;margin-bottom:6px">⚡ Начисление демо-тенге вручную</h3>
+    <h3 style="font-size:15px;margin-bottom:6px">⚡ Начисление тенге вручную</h3>
     <p style="color:var(--text2);font-size:13px;margin-bottom:14px">Введи номер счёта клиента и сумму — средства придут после «Обновить баланс» в кабинете.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <input type="text" id="admNum" placeholder="PB-000000000000" style="letter-spacing:1px;flex:1;min-width:180px">
@@ -436,7 +436,7 @@ async function creditAccount(){
     const { sha, credits } = await fetchCredits();
     credits.push({ id: 'c' + Date.now(), num, sum, note: 'начисление', date: Date.now() });
     await putCredits(credits, sha, 'credit ' + num + ' ' + sum + ' ₸');
-    msg.innerHTML = '✅ Начислено <b>' + new Intl.NumberFormat('ru-RU').format(sum) + ' демо ₸</b> на ' + num +
+    msg.innerHTML = '✅ Начислено <b>' + new Intl.NumberFormat('ru-RU').format(sum) + ' ₸</b> на ' + num +
       '. Клиент нажмёт «Обновить баланс» — и деньги придут.';
     msg.style.color = 'var(--ok)';
     document.getElementById('admNum').value = ''; document.getElementById('admSum').value = '';

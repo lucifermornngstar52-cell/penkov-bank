@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PenkovCasino — играй на демо-тенге</title>
+<title>HikariOS Casino — играй на тенге</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%237c3aed'/><text x='50' y='70' font-size='58' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>🎲</text></svg>">
 <style>
 :root{
@@ -115,21 +115,21 @@ footer a:hover{color:var(--p2)}
 <body>
 <div class="wrap">
   <header>
-    <a class="logo" href="index.html"><span class="logo-badge">🎲</span>PenkovCasino</a>
-    <div class="balance-pill"><span>💵</span><span><b id="balVal">0</b> демо ₸<div class="acc" id="balAcc"></div></span></div>
+    <a class="logo" href="index.html"><span class="logo-badge">🎲</span>HikariOS Casino</a>
+    <div class="balance-pill"><span>💵</span><span><b id="balVal">0</b> ₸<div class="acc" id="balAcc"></div></span></div>
     <button class="btn btn-gold" style="font-size:13px;padding:9px 16px" onclick="bankToCasino()">🏦 Пополнить с банка</button>
     <button class="btn btn-ghost" style="font-size:13px;padding:9px 16px" onclick="casinoToBank()">↩ Вывести в банк</button>
   </header>
 
   <div class="hero-band">
-    <h1>Казино PenkovBank 🎰</h1>
-    <p>Играй на демо-тенге со своего счёта. Проигрыш — тоже демо. Почти безболезненно.</p>
+    <h1>Казино HikariOS 🎰</h1>
+    <p>Играй на тенге со своего счёта. Проигрыш — почти безболезненный.</p>
   </div>
 
   <div id="needAcct" class="no-acct">
     <h2>Казино только для клиентов банка ⚠️</h2>
-    <p>Чтобы играть, нужен демо-счёт PenkovBank. Открой его за 5 секунд — и возвращайся к столу.</p>
-    <a class="btn btn-gold" href="index.html#account">🚀 Открыть демо счёт</a>
+    <p>Чтобы играть, нужен счёт HikariOS Bank. Открой его за 5 секунд — и возвращайся к столу.</p>
+    <a class="btn btn-gold" href="index.html#account">🚀 Открыть счёт</a>
   </div>
 
   <div id="games" class="grid">
@@ -225,9 +225,9 @@ footer a:hover{color:var(--p2)}
   </div>
 
   <footer>
-    Играй ответственно. Все деньги — демо-тенге PenkovBank, реальной ценности не имеют.<br>
-    При зависимостях от рулетки из Монополии — жалуйся банку: он сам виноват.<br>
-    <a href="index.html">← PenkovBank</a> · <a href="casino.html">Казино</a> · <a href="market.html">🛍 Магазин Монополии</a>
+    Играй ответственно.<br>
+    При зависимостях от рулетки — жалуйся банку: он сам виноват.<br>
+    <a href="index.html">← HikariOS Bank</a> · <a href="casino.html">Казино</a> · <a href="market.html">🛍 Магазин</a>
   </footer>
 </div>
 
@@ -259,7 +259,7 @@ function refreshBal(){
 
 function bankToCasino(){
   const a = getAcct();
-  if (!a) { alert('Сначала открой счёт PenkovBank 🏦'); return; }
+  if (!a) { alert('Сначала открой счёт HikariOS Bank 🏦'); return; }
   const c = casEnsure();
   const v = prompt('Пополнить казино с банковского счёта\n\nБанк: ' + fmt(a.balance) + ' ₸\nКазино: ' + fmt(c.balance) + ' ₸\n\nСколько внести в казино?', '1000');
   if (v === null) return;
@@ -278,7 +278,7 @@ function bankToCasino(){
 
 function casinoToBank(){
   const a = getAcct();
-  if (!a) { alert('Сначала открой счёт PenkovBank 🏦'); return; }
+  if (!a) { alert('Сначала открой счёт HikariOS Bank 🏦'); return; }
   const c = casEnsure();
   const v = prompt('Вывести из казино на банковский счёт\n\nКазино: ' + fmt(c.balance) + ' ₸\nБанк: ' + fmt(a.balance) + ' ₸\n\nСколько вывести?', '1000');
   if (v === null) return;
@@ -408,7 +408,7 @@ function pokExchange(n){
   if (cmp > 0) {
     const prize = pokAnte * 2;
     changeBal(prize, 'Выигрыш в покере: ' + pe.name);
-    show('pokRes','win',`🎉 Ты: <b>${pe.name}</b> · Дилер: ${dee.name}. Победа! +${fmt(prize)} демо ₸`);
+    show('pokRes','win',`🎉 Ты: <b>${pe.name}</b> · Дилер: ${dee.name}. Победа! +${fmt(prize)} ₸`);
   } else if (cmp === 0) {
     changeBal(pokAnte, 'Ничья в покере');
     show('pokRes','info',`🤝 Оба: <b>${pe.name}</b>. Ставка возвращается.`);
@@ -487,10 +487,10 @@ function bjFinish(outcome, why){
   if (outcome === 'bj') {
     const prize = Math.floor(bjAnte * 2.5);
     changeBal(prize, 'БЛЭКДЖЕК! ' + fmt(prize) + ' ₸');
-    show('bjRes','win','🂡 БЛЭКДЖЕК! 21 с раздачи — выплата 3:2: +' + fmt(prize) + ' демо ₸');
+    show('bjRes','win','🂡 БЛЭКДЖЕК! 21 с раздачи — выплата 3:2: +' + fmt(prize) + ' ₸');
   } else if (outcome === 'win') {
     changeBal(bjAnte * 2, 'Выигрыш в блэкджеке');
-    show('bjRes','win','🎉 Победа: ' + (why || p + ' против ' + d) + '! +' + fmt(bjAnte * 2) + ' демо ₸');
+    show('bjRes','win','🎉 Победа: ' + (why || p + ' против ' + d) + '! +' + fmt(bjAnte * 2) + ' ₸');
   } else if (outcome === 'push') {
     changeBal(bjAnte, 'Ничья в блэкджеке');
     show('bjRes','info','🤝 Ничья (' + p + ' = ' + d + '). Ставка возвращается.');
@@ -506,7 +506,7 @@ function takeBet(id){
   const c = casEnsure();
   const bet = Math.floor(+document.getElementById(id).value);
   if (!bet || bet <= 0) { alert('Введи ставку 🙂'); return null; }
-  if (bet > c.balance) { alert('Недостаточно демо-тенге в казино! На казино-балансе ' + fmt(c.balance) + ' ₸ — пополнить можно с банка 🏦'); return null; }
+  if (bet > c.balance) { alert('Недостаточно средств в казино! На казино-балансе ' + fmt(c.balance) + ' ₸ — пополнить можно с банка 🏦'); return null; }
   changeBal(-bet);
   return bet;
 }
@@ -544,7 +544,7 @@ function rollDice(){
     if (won) {
       const prize = bet * mult;
       changeBal(prize, 'Выигрыш в казино (кубики): ' + a + '+' + b);
-      show('diceRes','win','🎉 Сумма ' + sum + '! Выигрыш +' + fmt(prize) + ' демо ₸ (x' + mult + ')');
+      show('diceRes','win','🎉 Сумма ' + sum + '! Выигрыш +' + fmt(prize) + ' ₸ (x' + mult + ')');
     } else {
       changeBal(0); show('diceRes','lose','💀 Сумма ' + sum + '. Ставка ' + fmt(bet) + ' ₸ ушла казино');
     }
@@ -574,7 +574,7 @@ function spinRoulette(){
     if (won) {
       const prize = bet * mult;
       changeBal(prize, 'Выигрыш в рулетке');
-      show('rouRes','win','🎉 ' + (isZero ? 'ЗЕРО!' : (isRed ? 'Красное ' : 'Чёрное ') + num.textContent) + '! +' + fmt(prize) + ' демо ₸');
+      show('rouRes','win','🎉 ' + (isZero ? 'ЗЕРО!' : (isRed ? 'Красное ' : 'Чёрное ') + num.textContent) + '! +' + fmt(prize) + ' ₸');
     } else {
       show('rouRes','lose','💀 ' + (isZero ? 'Зеро...' : (isRed ? 'Красное' : 'Чёрное') + ' ' + num.textContent) + '. Минус ' + fmt(bet) + ' ₸');
     }
@@ -603,7 +603,7 @@ function spinSlots(){
     if (s1 === s2 && s2 === s3) {
       const prize = bet * PAY[s1];
       changeBal(prize, 'ДЖЕКПОТ в слотах ' + s1 + s1 + s1);
-      show('slotRes','win','🎉 ДЖЕКПОТ ' + s1 + s1 + s1 + '! +' + fmt(prize) + ' демо ₸ (x' + PAY[s1] + ')');
+      show('slotRes','win','🎉 ДЖЕКПОТ ' + s1 + s1 + s1 + '! +' + fmt(prize) + ' ₸ (x' + PAY[s1] + ')');
     } else if (s1 === s2 || s2 === s3 || s1 === s3) {
       const prize = bet; // две одинаковые — возврат ставки
       changeBal(prize, 'Возврат ставки (пара в слотах)');
