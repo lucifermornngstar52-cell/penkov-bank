@@ -183,9 +183,10 @@ footer a:hover{color:var(--p2)}
     <!-- POKER -->
     <div class="tile" style="grid-column:1/-1">
       <h3>🃏 Покер <span style="font-size:12px;color:var(--text2)">пятикарточный дро · против дилера</span></h3>
-      <div class="poker-label">Дилер</div>
+      <div class="poker-label" id="pokDealerLabel">Дилер</div>
       <div class="poker-cards" id="dealerCards"></div>
-      <div class="poker-label">Твоя рука — кликни по картам, чтобы отдать в обмен (до 3)</div>
+      <div class="poker-label" id="pokHandLabel">Твоя рука — кликни по картам, чтобы отдать в обмен (до 3)</div>
+      <div style="text-align:center;margin:0 0 4px"><b id="pokHandName" style="font-size:14px;color:var(--p2)"></b></div>
       <div class="poker-cards" id="playerCards"></div>
       <div class="bet-row"><input type="number" id="pokBet" value="100" min="1"></div>
       <div class="quick">
@@ -276,6 +277,16 @@ function pokToggle(r, s){
 function pokRender(revealDealer){
   document.getElementById('dealerCards').innerHTML = pokDealer.map(c => cardHtml(c, !revealDealer, false, false)).join('');
   document.getElementById('playerCards').innerHTML = pokPlayer.map(c => cardHtml(c, false, pokPhase === 'exchange', pokSel.has(c.r + '-' + c.s))).join('');
+  // живое название руки игрока (и дилера на шоудауне)
+  const pn = document.getElementById('pokHandName');
+  const dl = document.getElementById('pokDealerLabel');
+  if (pokPlayer.length === 5) {
+    const pe = evalHand(pokPlayer);
+    pn.textContent = '🃏 У тебя: ' + pe.name;
+    pn.style.color = pe.cat >= 4 ? 'var(--gold)' : 'var(--p2)';
+  } else pn.textContent = '';
+  if (revealDealer && pokDealer.length === 5) dl.innerHTML = 'Дилер · <b style="color:var(--gold)">' + evalHand(pokDealer).name + '</b>';
+  else dl.textContent = 'Дилер';
 }
 function evalHand(cards){
   const rs = cards.map(c => c.r).sort((a, b) => b - a);
@@ -578,6 +589,16 @@ function pokToggle(r, s){
 function pokRender(revealDealer){
   document.getElementById('dealerCards').innerHTML = pokDealer.map(c => cardHtml(c, !revealDealer, false, false)).join('');
   document.getElementById('playerCards').innerHTML = pokPlayer.map(c => cardHtml(c, false, pokPhase === 'exchange', pokSel.has(c.r + '-' + c.s))).join('');
+  // живое название руки игрока (и дилера на шоудауне)
+  const pn = document.getElementById('pokHandName');
+  const dl = document.getElementById('pokDealerLabel');
+  if (pokPlayer.length === 5) {
+    const pe = evalHand(pokPlayer);
+    pn.textContent = '🃏 У тебя: ' + pe.name;
+    pn.style.color = pe.cat >= 4 ? 'var(--gold)' : 'var(--p2)';
+  } else pn.textContent = '';
+  if (revealDealer && pokDealer.length === 5) dl.innerHTML = 'Дилер · <b style="color:var(--gold)">' + evalHand(pokDealer).name + '</b>';
+  else dl.textContent = 'Дилер';
 }
 function evalHand(cards){
   const rs = cards.map(c => c.r).sort((a, b) => b - a);
