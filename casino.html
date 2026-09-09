@@ -198,6 +198,27 @@ footer a:hover{color:var(--p2)}
       </div>
       <div class="result" id="pokRes"></div>
     </div>
+
+    <!-- BLACKJACK -->
+    <div class="tile" style="grid-column:1/-1">
+      <h3>🂡 Блэкджек <span style="font-size:12px;color:var(--text2)">дилер добирает до 17 · блэкджек платит 3:2</span></h3>
+      <div class="poker-label" id="bjDealerLabel">Дилер</div>
+      <div class="poker-cards" id="bjDealerCards"></div>
+      <div class="poker-label" id="bjPlayerLabel">Твоя рука</div>
+      <div class="poker-cards" id="bjPlayerCards"></div>
+      <div class="bet-row"><input type="number" id="bjBet" value="100" min="1"></div>
+      <div class="quick">
+        <button onclick="setBet('bjBet',100)">+100</button><button onclick="setBet('bjBet',500)">+500</button>
+        <button onclick="setBet('bjBet',1000)">+1 000</button><button onclick="allIn('bjBet')">ВСЁ НА КОН 🤠</button>
+      </div>
+      <div class="poker-btns">
+        <button class="btn btn-primary" id="bjMain" onclick="bjMain()">🂡 Сдать карты</button>
+        <button class="btn btn-ghost" id="bjHit" style="display:none" onclick="bjHit()">➕ Ещё</button>
+        <button class="btn btn-ghost" id="bjStand" style="display:none" onclick="bjStand(false)">✋ Хватит</button>
+        <button class="btn btn-gold" id="bjDouble" style="display:none" onclick="bjDouble()">x2 Удвоить</button>
+      </div>
+      <div class="result" id="bjRes"></div>
+    </div>
   </div>
 
   <footer>
@@ -328,6 +349,90 @@ function pokExchange(n){
   } else {
     show('pokRes','lose',`💀 Ты: ${pe.name} · Дилер: <b>${dee.name}</b>. Дилер забирает ${fmt(pokAnte)} ₸`);
   }
+}
+
+// ===== BLACKJACK =====
+let bjDeck = [], bjPlayer = [], bjDealer = [], bjPhase = 'idle', bjAnte = 0;
+function bjVal(hand){
+  let sum = 0, aces = 0;
+  hand.forEach(c => { const v = c.r >= 11 ? (c.r === 14 ? 11 : 10) : c.r; if (c.r === 14) aces++; sum += v; });
+  while (sum > 21 && aces > 0) { sum -= 10; aces--; }
+  return sum;
+}
+function bjRender(hideDealer){
+  document.getElementById('bjDealerCards').innerHTML =
+    bjDealer.map((c, i) => cardHtml(c, hideDealer && i === 1, false, false)).join('');
+  document.getElementById('bjPlayerCards').innerHTML = bjPlayer.map(c => cardHtml(c, false, false, false)).join('');
+  document.getElementById('bjDealerLabel').textContent = 'Дилер' + (bjDealer.length ? ' · ' + (hideDealer ? bjVal([bjDealer[0]]) + ' + ?' : bjVal(bjDealer)) : '');
+  document.getElementById('bjPlayerLabel').textContent = 'Твоя рука' + (bjPlayer.length ? ' · ' + bjVal(bjPlayer) : '');
+}
+function bjButtons(play){
+  document.getElementById('bjMain').style.display = play ? 'none' : 'inline-flex';
+  document.getElementById('bjHit').style.display = play ? 'inline-flex' : 'none';
+  document.getElementById('bjStand').style.display = play ? 'inline-flex' : 'none';
+  const canDouble = play && bjPlayer.length === 2 && getAcct() && getAcct().balance >= bjAnte;
+  document.getElementById('bjDouble').style.display = canDouble ? 'inline-flex' : 'none';
+}
+function bjMain(){
+  if (bjPhase === 'play') return;
+  const bet = takeBet('bjBet'); if (!bet) return;
+  bjAnte = bet; bjDeck = pokNewDeck();
+  bjPlayer = bjDeck.splice(0, 2); bjDealer = bjDeck.splice(0, 2);
+  bjPhase = 'play'; bjRender(true); bjButtons(true);
+  const pBJ = bjVal(bjPlayer) === 21, dBJ = bjVal(bjDealer) === 21;
+  if (pBJ || dBJ) bjStand(true);
+}
+function bjHit(){
+  if (bjPhase !== 'play') return;
+  bjPlayer.push(bjDeck.pop());
+  bjRender(true); bjButtons(true);
+  const v = bjVal(bjPlayer);
+  if (v > 21) bjFinish('bust');
+  else if (v === 21) bjStand(false);
+}
+function bjDouble(){
+  if (bjPhase !== 'play' || bjPlayer.length !== 2) return;
+  const a = getAcct(); if (!a || a.balance < bjAnte) { alert('Не хватает на удвоение'); return; }
+  changeBal(-bjAnte, null); bjAnte *= 2;
+  bjPlayer.push(bjDeck.pop());
+  bjRender(true); bjButtons(false);
+  if (bjVal(bjPlayer) > 21) bjFinish('bust'); else bjStand(false);
+}
+function bjStand(natural){
+  if (bjPhase !== 'play') return;
+  while (bjVal(bjDealer) < 17) bjDealer.push(bjDeck.pop());
+  bjRender(false); bjButtons(false);
+  const p = bjVal(bjPlayer), d = bjVal(bjDealer);
+  const pBJ = natural && p === 21 && bjPlayer.length === 2;
+  const dBJ = natural && d === 21 && bjDealer.length === 2;
+  if (p > 21) bjFinish('bust');
+  else if (d > 21) bjFinish('win', 'Дилер перебор (' + d + ')');
+  else if (pBJ && !dBJ) bjFinish('bj');
+  else if (dBJ && !pBJ) bjFinish('lose', 'У дилера блэкджек 💀');
+  else if (pBJ && dBJ) bjFinish('push');
+  else if (p > d) bjFinish('win', p + ' против ' + d);
+  else if (p < d) bjFinish('lose');
+  else bjFinish('push');
+}
+function bjFinish(outcome, why){
+  bjPhase = 'idle';
+  const p = bjVal(bjPlayer), d = bjVal(bjDealer);
+  if (outcome === 'bj') {
+    const prize = Math.floor(bjAnte * 2.5);
+    changeBal(prize, 'БЛЭКДЖЕК! ' + fmt(prize) + ' ₸');
+    show('bjRes','win','🂡 БЛЭКДЖЕК! 21 с раздачи — выплата 3:2: +' + fmt(prize) + ' демо ₸');
+  } else if (outcome === 'win') {
+    changeBal(bjAnte * 2, 'Выигрыш в блэкджеке');
+    show('bjRes','win','🎉 Победа: ' + (why || p + ' против ' + d) + '! +' + fmt(bjAnte * 2) + ' демо ₸');
+  } else if (outcome === 'push') {
+    changeBal(bjAnte, 'Ничья в блэкджеке');
+    show('bjRes','info','🤝 Ничья (' + p + ' = ' + d + '). Ставка возвращается.');
+  } else if (outcome === 'bust') {
+    show('bjRes','lose','💀 Перебор: ' + p + '. Казино забирает ' + fmt(bjAnte) + ' ₸');
+  } else {
+    show('bjRes','lose','💀 Дилер сильнее: ' + (why || d + ' против ' + p) + '. Минус ' + fmt(bjAnte) + ' ₸');
+  }
+  document.getElementById('bjMain').textContent = '🂡 Ещё раз';
 }
 
 refreshBal(); return true;
