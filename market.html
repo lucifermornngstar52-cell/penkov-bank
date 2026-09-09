@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PenkovMarket — магазин активов для Монополии</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%237c3aed'/><text x='50' y='70' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>🛍</text></svg>">
+<style>
+:root{
+  --bg:#0b0b12; --bg2:#12121c; --card:#161626; --line:rgba(124,58,237,.22);
+  --p:#7c3aed; --p2:#a78bfa; --text:#e8e8f0; --text2:#9a9ab0; --ok:#34d399; --gold:#fbbf24; --red:#ef4444;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  background-image:radial-gradient(rgba(124,58,237,.14) 1px,transparent 1px);background-size:26px 26px;padding-bottom:70px}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 5vw}
+header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:10px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px}
+.logo-badge{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--p),#4c1d95);
+  display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 0 24px rgba(124,58,237,.5)}
+.balance-pill{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);
+  border-radius:999px;padding:9px 18px;font-weight:700}
+.balance-pill b{background:linear-gradient(135deg,#fff,var(--p2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.balance-pill .acc{font-size:11px;color:var(--text2);font-weight:400}
+.hero-band{text-align:center;padding:26px 0 8px}
+.hero-band h1{font-size:clamp(26px,5vw,40px);font-weight:800;letter-spacing:-.5px}
+.hero-band h1 span{background:linear-gradient(135deg,var(--p2),var(--p));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero-band p{color:var(--text2);margin-top:10px;font-size:15px}
+.assets-bar{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:18px 0 8px;font-size:13.5px}
+.assets-bar span{background:var(--card);border:1px solid var(--line);padding:8px 16px;border-radius:999px;color:var(--text2)}
+.assets-bar b{color:var(--gold)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:14px;border:none;cursor:pointer;
+  font-size:14px;font-weight:600;transition:.25s;font-family:inherit}
+.btn-primary{background:linear-gradient(135deg,var(--p),#6d28d9);color:#fff;box-shadow:0 4px 24px rgba(124,58,237,.35)}
+.btn-primary:hover{transform:translateY(-2px)}
+.btn-gold{background:linear-gradient(135deg,#f59e0b,#d97706);color:#1a1000}
+.btn-gold:hover{transform:translateY(-2px)}
+.btn-ghost{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--line)}
+.btn-ghost:hover{border-color:var(--p)}
+.btn-locked{background:rgba(255,255,255,.06);color:var(--text2);cursor:not-allowed;box-shadow:none}
+.no-acct{border-radius:20px;border:1px solid var(--gold);background:rgba(245,158,11,.08);padding:30px;text-align:center;margin-top:30px}
+.no-acct h2{font-size:22px;margin-bottom:10px}
+.no-acct p{color:var(--text2);font-size:14px;margin-bottom:18px}
+#shop{display:none}
+.sec-head{text-align:center;margin:44px 0 26px}
+.sec-head h2{font-size:clamp(22px,4vw,32px);font-weight:800}
+.sec-head h2 i{font-style:normal;margin-right:8px}
+.sec-head p{color:var(--text2);margin-top:8px;font-size:14px}
+.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden;transition:.3s}
+.tile:hover{transform:translateY(-6px);border-color:rgba(167,139,250,.5);box-shadow:0 14px 44px rgba(124,58,237,.25)}
+.tile img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block}
+.tile .body{padding:18px 20px 20px}
+.tile h3{font-size:16.5px;margin-bottom:4px}
+.tile .place{font-size:12.5px;color:var(--text2);margin-bottom:10px}
+.tile .price{font-size:18px;font-weight:800;color:var(--gold);margin-bottom:12px}
+.tile .price small{font-size:11px;color:var(--text2);font-weight:400;display:block;margin-top:2px}
+.tile .btn{width:100%;justify-content:center}
+.badge-owned{position:absolute}
+.tile{position:relative}
+.owned-tag{position:absolute;top:12px;right:12px;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.5);
+  color:var(--ok);font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:999px;backdrop-filter:blur(6px)}
+footer{text-align:center;color:var(--text2);font-size:13px;margin-top:50px;line-height:2}
+footer a{color:var(--p2)}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="logo" href="index.html"><span class="logo-badge">🛍</span>PenkovMarket</a>
+    <div class="balance-pill"><span>🏦</span><span><b id="balVal">0</b> ₸ на счету<div class="acc" id="balAcc"></div></span></div>
+  </header>
+
+  <div class="hero-band">
+    <h1>Магазин активов для <span>Монополии</span></h1>
+    <p>Недвижимость и тачки — от студии в Караганде до Bugatti. Цены честные, по рынку Казахстана. Всё за демо-тенге PenkovBank.</p>
+    <div class="assets-bar" id="assetsBar" style="display:none">
+      <span>🏠 Активов: <b id="ownCount">0</b></span>
+      <span>💎 Стоимость портфеля: <b id="ownSum">0 ₸</b></span>
+    </div>
+  </div>
+
+  <div id="needAcct" class="no-acct">
+    <h2>Магазин только для клиентов PenkovBank ⚠️</h2>
+    <p>Покупать активы можно только с демо-счёта банка. Открой его за 5 секунд — и возвращайся за Bugatti.</p>
+    <a class="btn btn-gold" href="index.html#account">🚀 Открыть демо счёт</a>
+  </div>
+
+  <div id="shop">
+    <div class="sec-head">
+      <h2><i>🏠</i>Недвижимость</h2>
+      <p>От дешёвой студии до виллы у гор — отсортировано от бюджетных к элитным</p>
+    </div>
+    <div class="grid" id="estateGrid"></div>
+
+    <div class="sec-head">
+      <h2><i>🚗</i>Авто</h2>
+      <p>От Матиза до Chiron — отсортировано от бюджетных к суперкарам</p>
+    </div>
+    <div class="grid" id="carsGrid"></div>
+  </div>
+
+  <footer>
+    Все активы — демо, но амбиции — настоящие. Цены ориентировочные по рынку Казахстана.<br>
+    <a href="index.html">🏦 PenkovBank</a> · <a href="casino.html">🎲 Казино</a> · <a href="market.html">🛍 Магазин</a>
+  </footer>
+</div>
+
+<script>
+const getAcct = () => JSON.parse(localStorage.getItem('pb_account') || 'null');
+const saveAcct = a => localStorage.setItem('pb_account', JSON.stringify(a));
+const getOwn = () => JSON.parse(localStorage.getItem('pb_owned') || '[]');
+const saveOwn = o => localStorage.setItem('pb_owned', JSON.stringify(o));
+const fmt = n => new Intl.NumberFormat('ru-RU').format(n);
+
+const ITEMS = [
+  // ===== НЕДВИЖИМОСТЬ =====
+  { id:'estate1', cat:'estate', name:'Студия, 32 м²', place:'Караганда · спальный район', price:12900000, img:'images/studio.jpg', desc:'Бюджетный старт. Свои стены — уже не аренда.' },
+  { id:'estate2', cat:'estate', name:'2-комн, 54 м²', place:'Павлодар · панелька', price:19500000, img:'images/flat2.jpg', desc:'Тёплая классика с ковром на стене. Как у бабушки, только твоя.' },
+  { id:'estate3', cat:'estate', name:'2-комн, 62 м²', place:'Астана · левый берег (Эсил)', price:28000000, img:'images/astana.jpg', desc:'Новостройка с видом на реку и стеклянные башни столицы.' },
+  { id:'estate4', cat:'estate', name:'3-комн, 85 м²', place:'Алматы · Бостандыкский р-н', price:47000000, img:'images/almaty3.jpg', desc:'Современный ремонт, окна на Заилийский Алатау.' },
+  { id:'estate5', cat:'estate', name:'Дом, 2 этажа, 5 соток', place:'Каскелен · пригород Алматы', price:68000000, img:'images/house.jpg', desc:'Свой двор с яблонями и горы на горизонте.' },
+  { id:'estate6', cat:'estate', name:'Пентхаус, 180 м²', place:'Астана · Эсил, последний этаж', price:240000000, img:'images/penthouse.jpg', desc:'Панорамные окна, Байтерек под ногами. Живёшь выше всех.' },
+  { id:'estate7', cat:'estate', name:'Вилла, 450 м²', place:'Алматы · Горный массив', price:850000000, img:'images/villa.jpg', desc:'Бассейн, стекло на полстены и Тянь-Шань в личном распоряжении.' },
+  // ===== АВТО =====
+  { id:'car1', cat:'cars', name:'Daewoo Matiz, 2008', place:'Б/у · 1.0 AT · «птичка»', price:950000, img:'images/matiz.jpg', desc:'Первая тачка мечты. Едет, когда верит в тебя.' },
+  { id:'car2', cat:'cars', name:'Lada Granta, новая', place:'Дилер · 1.6 MT · седан', price:6800000, img:'images/granta.jpg', desc:'Свежая из салона. Запах нового пластика прилагается.' },
+  { id:'car3', cat:'cars', name:'Toyota Camry, 2018', place:'Б/у · 2.5 AT · бизнес-класс', price:11500000, img:'images/camry.jpg', desc:'Народный премиум Казахстана. Уважают на любой парковке.' },
+  { id:'car4', cat:'cars', name:'Toyota Land Cruiser 300', place:'Новая · 3.5 TT · внедорожник', price:38000000, img:'images/lc300.jpg', desc:'Крузак. Идёт везде, где заканчивается асфальт и начинается уважение.' },
+  { id:'car5', cat:'cars', name:'Mercedes-AMG G63', place:'Новая · 4.0 V8 · G-класс', price:78000000, img:'images/g63.jpg', desc:'Кубик с характером. V8 рычит так, что соседи узнают о покупке первыми.' },
+  { id:'car6', cat:'cars', name:'Bugatti Chiron', place:'Новая · 8.0 W16 · гипекар', price:2300000000, img:'images/chiron.jpg', desc:'1500 лошадей. Стоит как три виллы — но разве вилла едет 420 км/ч?' }
+];
+
+function refreshBal(){
+  const a = getAcct();
+  if (!a) return;
+  document.getElementById('needAcct').style.display = 'none';
+  document.getElementById('shop').style.display = 'block';
+  document.getElementById('assetsBar').style.display = 'flex';
+  document.getElementById('balVal').textContent = fmt(a.balance);
+  document.getElementById('balAcc').textContent = a.num;
+  const own = getOwn();
+  const sum = ITEMS.filter(i => own.includes(i.id)).reduce((s,i) => s + i.price, 0);
+  document.getElementById('ownCount').textContent = own.length;
+  document.getElementById('ownSum').textContent = fmt(sum) + ' ₸';
+}
+
+function cardHtml(it){
+  const a = getAcct();
+  const own = getOwn();
+  const owned = own.includes(it.id);
+  let btn;
+  if (owned) {
+    btn = '<button class="btn btn-gold" onclick="sellItem(\'' + it.id + '\')">↩ Продать за ' + fmt(Math.floor(it.price * 0.8)) + ' ₸</button>';
+  } else if (a && a.balance >= it.price) {
+    btn = '<button class="btn btn-primary" onclick="buyItem(\'' + it.id + '\')">🛒 Купить</button>';
+  } else {
+    const need = it.price - (a ? a.balance : 0);
+    btn = '<button class="btn btn-locked" onclick="alert(\'Не хватает \' + fmt(' + need + ') + \' ₸ — поищи перевод или возьми кредит в банке 🙂\')">🔒 Не хватает ' + fmt(need) + ' ₸</button>';
+  }
+  return '<div class="tile">' + (owned ? '<span class="owned-tag">✓ В собственности</span>' : '') +
+    '<img src="' + it.img + '" alt="' + it.name + '" loading="lazy">' +
+    '<div class="body"><h3>' + it.name + '</h3><div class="place">' + it.place + '</div>' +
+    '<p style="font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:12px">' + it.desc + '</p>' +
+    '<div class="price">' + fmt(it.price) + ' ₸' + (it.price >= 100000000 ? '<small>топ-сегмент рынка</small>' : '') + '</div>' +
+    btn + '</div></div>';
+}
+
+function render(){
+  document.getElementById('estateGrid').innerHTML =
+    ITEMS.filter(i => i.cat === 'estate').map(cardHtml).join('');
+  document.getElementById('carsGrid').innerHTML =
+    ITEMS.filter(i => i.cat === 'cars').map(cardHtml).join('');
+}
+
+function buyItem(id){
+  const it = ITEMS.find(i => i.id === id); if (!it) return;
+  const a = getAcct();
+  if (!a) { alert('Сначала открой счёт PenkovBank 🏦'); return; }
+  if (a.balance < it.price) { alert('Недостаточно средств 🙂'); render(); return; }
+  if (!confirm('Купить «' + it.name + '» за ' + fmt(it.price) + ' ₸?')) return;
+  a.balance -= it.price;
+  a.history.push({ op: '🛍 Куплено: ' + it.name + ' (' + it.place + ')', sum: -it.price, date: Date.now() });
+  saveAcct(a);
+  const own = getOwn(); own.push(id); saveOwn(own);
+  refreshBal(); render();
+  alert('🎉 «' + it.name + '» — теперь твоё! Списание с банковского счёта: ' + fmt(it.price) + ' ₸');
+}
+
+function sellItem(id){
+  const it = ITEMS.find(i => i.id === id); if (!it) return;
+  const back = Math.floor(it.price * 0.8);
+  if (!confirm('Продать «' + it.name + '» обратно магазину за ' + fmt(back) + ' ₸ (80% цены)?')) return;
+  const a = getAcct(); if (!a) return;
+  a.balance += back;
+  a.history.push({ op: '↩ Продано магазину: ' + it.name, sum: back, date: Date.now() });
+  saveAcct(a);
+  saveOwn(getOwn().filter(x => x !== id));
+  refreshBal(); render();
+  alert('Продано за ' + fmt(back) + ' ₸. Рынок есть рынок — 20% ушли на «сопровождение сделки» 😎');
+}
+
+refreshBal();
+render();
+</script>
+</body>
+</html>
