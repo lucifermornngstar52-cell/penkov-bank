@@ -121,6 +121,7 @@ section{padding:90px 6vw;max-width:1200px;margin:0 auto}
 .op-row{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line);font-size:14px}
 .op-row:last-child{border-bottom:none}
 .op-row .plus{color:var(--ok);font-weight:700}
+.op-row .minus{color:#f87171;font-weight:700}
 .op-row time{color:var(--text2);font-size:12px}
 /* admin */
 .admin-toggle{cursor:pointer;opacity:.45;font-size:12px;margin-top:10px;transition:.2s}
@@ -446,6 +447,22 @@ footer .logo{justify-content:center;margin-bottom:14px}
   </div>
 </div>
 
+<div class="loan-overlay" id="trOverlay" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="loan-box">
+    <button class="loan-close" onclick="document.getElementById('trOverlay').classList.remove('active')">×</button>
+    <h3>💸 Перевод демо-тенге</h3>
+    <div class="sub">Деньги уйдут со твоего счёта на счёт получателя. Пусть он нажмёт «Обновить баланс».</div>
+    <label>Номер счёта получателя</label>
+    <input type="text" id="trTo" placeholder="PB-123456789012" style="letter-spacing:1px">
+    <label>Сумма, демо ₸</label>
+    <input type="number" id="trSum" placeholder="Например: 5000" min="1">
+    <label>Комментарий (необязательно)</label>
+    <input type="text" id="trNote" placeholder="За улицу Пушкина 😎">
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:22px" onclick="sendTransfer()">💸 Отправить</button>
+    <p id="trMsg" style="font-size:13px;margin-top:12px;color:var(--text2)"></p>
+  </div>
+</div>
+
 <div class="loan-overlay" id="loanOverlay" onclick="if(event.target===this)closeLoan()">
   <div class="loan-box">
     <button class="loan-close" onclick="closeLoan()">×</button>
@@ -492,9 +509,11 @@ function renderCabinet(){
   document.getElementById('noAccount').style.display = a ? 'none' : 'block';
   document.getElementById('cabinet').style.display = a ? 'block' : 'none';
   if (!a) return;
-  const hist = (a.history || []).slice(-8).reverse().map(h =>
-    `<div class="op-row"><span>${h.op}</span>
-     <span><time>${new Date(h.date).toLocaleDateString('ru')} ${new Date(h.date).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})}</time> <b class="plus">+${new Intl.NumberFormat('ru-RU').format(h.sum)} ₸</b></span></div>`).join('');
+  const hist = (a.history || []).slice(-10).reverse().map(h => {
+    const neg = h.sum < 0;
+    return `<div class="op-row"><span>${h.op}</span>
+     <span><time>${new Date(h.date).toLocaleDateString('ru')} ${new Date(h.date).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})}</time> <b class="${neg?'minus':'plus'}">${neg?'−':'+'}${new Intl.NumberFormat('ru-RU').format(Math.abs(h.sum))} ₸</b></span></div>`;
+  }).join('');
   document.getElementById('cabinet').innerHTML = `
     <div class="acct-card">
       <div class="acct-top">
@@ -503,6 +522,7 @@ function renderCabinet(){
       </div>
       <div class="acct-actions">
         <button class="btn btn-primary" onclick="refreshBalance()">🔄 Обновить баланс</button>
+        <button class="btn btn-primary" onclick="openTransferModal()">💸 Перевести</button>
         <button class="btn btn-ghost" onclick="copyNum()">📋 Скопировать номер счёта</button>
         <button class="btn btn-ghost" onclick="closeAccountForever()">🗑 Закрыть счёт</button>
       </div>
@@ -526,18 +546,73 @@ async function fetchCredits(){
   return { sha: d.sha, credits: content.credits || [] };
 }
 
+const NTFY_TR = 'penkovbank-tr-9k4vxz';
+
+function openTransferModal(){ document.getElementById('trOverlay').classList.add('active'); }
+
+async function sendTransfer(){
+  const msg = document.getElementById('trMsg');
+  const a = getAcct(); if (!a) return;
+  const to = document.getElementById('trTo').value.trim().toUpperCase();
+  const sum = Math.floor(+document.getElementById('trSum').value);
+  const note = document.getElementById('trNote').value.trim();
+  if (!/^PB-\d{12}$/.test(to)) { msg.textContent = 'Номер счёта должен быть вида PB-123456789012'; msg.style.color = '#f87171'; return; }
+  if (to === a.num) { msg.textContent = 'Себе переводить не надо 😄'; msg.style.color = '#f87171'; return; }
+  if (!sum || sum <= 0) { msg.textContent = 'Введи сумму'; msg.style.color = '#f87171'; return; }
+  if (sum > a.balance) { msg.textContent = 'Недостаточно демо-тенге: на счету ' + new Intl.NumberFormat('ru-RU').format(a.balance) + ' ₸'; msg.style.color = '#f87171'; return; }
+  msg.textContent = '⏳ Отправляем...'; msg.style.color = 'var(--text2)';
+  try {
+    const r = await fetch('https://ntfy.sh/' + NTFY_TR, { method: 'POST', body: JSON.stringify({
+      from: a.num, fromName: a.name, to, sum, note
+    })});
+    if (!r.ok) throw new Error('ntfy ' + r.status);
+    a.balance -= sum;
+    a.history.push({ op: 'Перевод на ' + to + (note ? ' («' + note + '»)':''), sum: -sum, date: Date.now() });
+    saveAcct(a); renderCabinet();
+    msg.innerHTML = '✅ Отправлено <b>' + new Intl.NumberFormat('ru-RU').format(sum) + ' демо ₸</b> на ' + to +
+      '. Скажи получателю нажать «Обновить баланс».';
+    msg.style.color = 'var(--ok)';
+  } catch(e) {
+    msg.textContent = 'Ошибка отправки: ' + e.message + '. Деньги не списаны.';
+    msg.style.color = '#f87171';
+  }
+}
+
+async function fetchTransfers(myNum){
+  const r = await fetch('https://ntfy.sh/' + NTFY_TR + '/json?poll=1');
+  if (!r.ok) return [];
+  const text = await r.text();
+  const out = [];
+  text.trim().split('\n').forEach(line => {
+    try {
+      const ev = JSON.parse(line);
+      if (ev.type === 'message' && ev.message) {
+        const t = JSON.parse(ev.message);
+        if (t.to === myNum) out.push({ ...t, id: ev.id });
+      }
+    } catch(e) {}
+  });
+  return out;
+}
+
 async function refreshBalance(){
   try {
     const a = getAcct(); if (!a) return;
-    const { credits } = await fetchCredits();
-    const fresh = credits.filter(c => c.num === a.num && !(a.claimed || []).includes(c.id));
-    if (!fresh.length) { alert('Новых начислений нет. Как только Никита начислит — жми эту кнопку.'); return; }
-    let total = 0;
+    if (!a.claimedTr) a.claimedTr = [];
+    const [creditsRes, transfers] = await Promise.all([fetchCredits(), fetchTransfers(a.num).catch(() => [])]);
+    const fresh = creditsRes.credits.filter(c => c.num === a.num && !(a.claimed || []).includes(c.id));
+    const freshTr = transfers.filter(t => !a.claimedTr.includes(t.id));
+    if (!fresh.length && !freshTr.length) { alert('Новых поступлений нет. Жми, когда кто-то отправит перевод 🙂'); return; }
+    let total = 0, parts = [];
     fresh.forEach(c => { total += c.sum; a.claimed.push(c.id);
       a.history.push({ op: 'Начисление от PenkovBank: «' + (c.note || 'демо-кредит') + '»', sum: c.sum, date: Date.now() }); });
+    if (fresh.length) parts.push('начисления банка: ' + fresh.reduce((s,c)=>s+c.sum,0) + ' ₸');
+    freshTr.forEach(t => { total += t.sum; a.claimedTr.push(t.id);
+      a.history.push({ op: 'Перевод от ' + t.fromName + ' (' + t.from + ')' + (t.note ? ' «' + t.note + '»':''), sum: t.sum, date: Date.now() }); });
+    if (freshTr.length) parts.push('переводы: ' + freshTr.reduce((s,t)=>s+t.sum,0) + ' ₸');
     a.balance += total;
     saveAcct(a); renderCabinet();
-    alert('🎉 Начислено ' + new Intl.NumberFormat('ru-RU').format(total) + ' демо ₸!');
+    alert('🎉 Получено ' + new Intl.NumberFormat('ru-RU').format(total) + ' демо ₸!\n(' + parts.join(' + ') + ')');
   } catch(e) { alert('Ошибка соединения: ' + e.message); }
 }
 
