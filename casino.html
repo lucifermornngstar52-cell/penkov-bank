@@ -117,6 +117,8 @@ footer a:hover{color:var(--p2)}
   <header>
     <a class="logo" href="index.html"><span class="logo-badge">🎲</span>PenkovCasino</a>
     <div class="balance-pill"><span>💵</span><span><b id="balVal">0</b> демо ₸<div class="acc" id="balAcc"></div></span></div>
+    <button class="btn btn-gold" style="font-size:13px;padding:9px 16px" onclick="bankToCasino()">🏦 Пополнить с банка</button>
+    <button class="btn btn-ghost" style="font-size:13px;padding:9px 16px" onclick="casinoToBank()">↩ Вывести в банк</button>
   </header>
 
   <div class="hero-band">
@@ -232,23 +234,76 @@ footer a:hover{color:var(--p2)}
 <script>
 const getAcct = () => JSON.parse(localStorage.getItem('pb_account') || 'null');
 const saveAcct = a => localStorage.setItem('pb_account', JSON.stringify(a));
+const getCas = () => JSON.parse(localStorage.getItem('pb_casino') || 'null');
+const saveCas = c => localStorage.setItem('pb_casino', JSON.stringify(c));
 const fmt = n => new Intl.NumberFormat('ru-RU').format(n);
 let picks = { dice:'over', rou:'red' };
 
+// казино-баланс отдельный от банковского счёта
+function casEnsure(){
+  let c = getCas();
+  if (!c) { c = { balance: 0, history: [] }; saveCas(c); }
+  if (!c.history) c.history = [];
+  return c;
+}
+
 function refreshBal(){
   const a = getAcct();
-  if (a) {
-    document.getElementById('needAcct').style.display = 'none';
-    document.getElementById('games').style.display = 'grid';
-    document.getElementById('balVal').textContent = fmt(a.balance);
-    document.getElementById('balAcc').textContent = a.num;
-  }
+  if (!a) return; // без счёта банка — экран needAcct
+  const c = casEnsure();
+  document.getElementById('needAcct').style.display = 'none';
+  document.getElementById('games').style.display = 'grid';
+  document.getElementById('balVal').textContent = fmt(c.balance);
+  document.getElementById('balAcc').textContent = a.num;
 }
+
+function bankToCasino(){
+  const a = getAcct();
+  if (!a) { alert('Сначала открой счёт PenkovBank 🏦'); return; }
+  const c = casEnsure();
+  const v = prompt('Пополнить казино с банковского счёта\n\nБанк: ' + fmt(a.balance) + ' ₸\nКазино: ' + fmt(c.balance) + ' ₸\n\nСколько внести в казино?', '1000');
+  if (v === null) return;
+  const sum = Math.floor(+v);
+  if (!sum || sum <= 0) { alert('Введи сумму 🙂'); return; }
+  if (sum > a.balance) { alert('На банковском счёте только ' + fmt(a.balance) + ' ₸'); return; }
+  a.balance -= sum;
+  a.history.push({ op: '🎰 Пополнение казино', sum: -sum, date: Date.now() });
+  saveAcct(a);
+  c.balance += sum;
+  c.history.push({ op: 'Пополнение с банковского счёта', sum, date: Date.now() });
+  saveCas(c);
+  refreshBal();
+  alert('Казино пополнено на ' + fmt(sum) + ' ₸ 🎰');
+}
+
+function casinoToBank(){
+  const a = getAcct();
+  if (!a) { alert('Сначала открой счёт PenkovBank 🏦'); return; }
+  const c = casEnsure();
+  const v = prompt('Вывести из казино на банковский счёт\n\nКазино: ' + fmt(c.balance) + ' ₸\nБанк: ' + fmt(a.balance) + ' ₸\n\nСколько вывести?', '1000');
+  if (v === null) return;
+  const sum = Math.floor(+v);
+  if (!sum || sum <= 0) { alert('Введи сумму 🙂'); return; }
+  if (sum > c.balance) { alert('В казино только ' + fmt(c.balance) + ' ₸'); return; }
+  c.balance -= sum;
+  c.history.push({ op: 'Вывод в банк', sum: -sum, date: Date.now() });
+  saveCas(c);
+  a.balance += sum;
+  a.history.push({ op: '🎰 Вывод из казино', sum, date: Date.now() });
+  saveAcct(a);
+  refreshBal();
+  alert('Выведено ' + fmt(sum) + ' ₸ в банк 🏦');
+}
+
 function changeBal(delta, op){
-  const a = getAcct(); if (!a) return false;
-  a.balance += delta;
-  if (op) a.history.push({ op, sum: Math.abs(delta), date: Date.now() });
-  saveAcct(a); // ===== POKER (5-card draw vs dealer) =====
+  const c = casEnsure();
+  c.balance += delta;
+  if (op) c.history.push({ op, sum: Math.abs(delta), date: Date.now() });
+  saveCas(c);
+  refreshBal();
+  return true;
+}
+// ===== POKER (5-card draw vs dealer) =====
 const SUITS = ['♠','♥','♦','♣'], RED = {1:0,3:0}; // ♦(2nd idx 3?) — see mapping below
 const RANKS = ['2','3','4','5','6','7','8','9','10','В','Д','К','A'];
 const HAND_NAMES = ['Старшая карта','Пара','Две пары','Сет','Стрит','Флеш','Фулл-хаус','Каре','Стрит-флеш','Роял-флеш'];
@@ -381,7 +436,7 @@ function bjButtons(play){
   document.getElementById('bjMain').style.display = play ? 'none' : 'inline-flex';
   document.getElementById('bjHit').style.display = play ? 'inline-flex' : 'none';
   document.getElementById('bjStand').style.display = play ? 'inline-flex' : 'none';
-  const canDouble = play && bjPlayer.length === 2 && getAcct() && getAcct().balance >= bjAnte;
+  const canDouble = play && bjPlayer.length === 2 && getCas() && getCas().balance >= bjAnte;
   document.getElementById('bjDouble').style.display = canDouble ? 'inline-flex' : 'none';
 }
 function bjMain(){
@@ -403,7 +458,7 @@ function bjHit(){
 }
 function bjDouble(){
   if (bjPhase !== 'play' || bjPlayer.length !== 2) return;
-  const a = getAcct(); if (!a || a.balance < bjAnte) { alert('Не хватает на удвоение'); return; }
+  const c = casEnsure(); if (c.balance < bjAnte) { alert('Не хватает на удвоение'); return; }
   changeBal(-bjAnte, null); bjAnte *= 2;
   bjPlayer.push(bjDeck.pop());
   bjRender(true); bjButtons(false);
@@ -427,6 +482,7 @@ function bjStand(natural){
 }
 function bjFinish(outcome, why){
   bjPhase = 'idle';
+  bjRender(false);
   const p = bjVal(bjPlayer), d = bjVal(bjDealer);
   if (outcome === 'bj') {
     const prize = Math.floor(bjAnte * 2.5);
@@ -446,18 +502,16 @@ function bjFinish(outcome, why){
   document.getElementById('bjMain').textContent = '🂡 Ещё раз';
 }
 
-refreshBal(); return true;
-}
 function takeBet(id){
-  const a = getAcct(); if (!a) return null;
+  const c = casEnsure();
   const bet = Math.floor(+document.getElementById(id).value);
   if (!bet || bet <= 0) { alert('Введи ставку 🙂'); return null; }
-  if (bet > a.balance) { alert('Недостаточно демо-тенге! На счету ' + fmt(a.balance) + ' ₸'); return null; }
+  if (bet > c.balance) { alert('Недостаточно демо-тенге в казино! На казино-балансе ' + fmt(c.balance) + ' ₸ — пополнить можно с банка 🏦'); return null; }
   changeBal(-bet);
   return bet;
 }
 function setBet(id, v){ document.getElementById(id).value = Math.max(1, (+document.getElementById(id).value || 0) + v); }
-function allIn(id){ const a = getAcct(); if (a) document.getElementById(id).value = a.balance; }
+function allIn(id){ const c = getCas(); if (c) document.getElementById(id).value = c.balance; }
 function pickChoice(el){
   picks[el.dataset.g] = el.dataset.v;
   document.querySelectorAll('[data-g="'+el.dataset.g+'"]').forEach(c => c.classList.remove('sel'));
@@ -558,120 +612,6 @@ function spinSlots(){
       show('slotRes','lose','💀 Мимо. Барабаны съели ' + fmt(bet) + ' ₸');
     }
   }, 1400);
-}
-
-// ===== POKER (5-card draw vs dealer) =====
-const SUITS = ['♠','♥','♦','♣'], RED = {1:0,3:0}; // ♦(2nd idx 3?) — see mapping below
-const RANKS = ['2','3','4','5','6','7','8','9','10','В','Д','К','A'];
-const HAND_NAMES = ['Старшая карта','Пара','Две пары','Сет','Стрит','Флеш','Фулл-хаус','Каре','Стрит-флеш','Роял-флеш'];
-let pokDeck = [], pokPlayer = [], pokDealer = [], pokPhase = 'idle', pokSel = new Set(), pokAnte = 0;
-
-function pokNewDeck(){
-  const d = [];
-  for (let s = 0; s < 4; s++) for (let r = 2; r <= 14; r++) d.push({ r, s });
-  for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; }
-  return d;
-}
-function cardHtml(c, hidden, pickable, sel){
-  if (hidden) return '<div class="pcard back">?</div>';
-  const red = (c.s === 1 || c.s === 3);
-  const rank = RANKS[c.r - 2];
-  return `<div class="pcard ${red?'red':''} ${pickable?'pickable':''} ${sel?'sel':''}"
-    ${pickable?`onclick="pokToggle(${c.r},${c.s})"`:''}>${rank}<small>${SUITS[c.s]}</small></div>`;
-}
-function pokToggle(r, s){
-  const key = r + '-' + s;
-  if (pokPhase !== 'exchange') return;
-  if (pokSel.has(key)) pokSel.delete(key);
-  else if (pokSel.size < 3) pokSel.add(key);
-  pokRender();
-}
-function pokRender(revealDealer){
-  document.getElementById('dealerCards').innerHTML = pokDealer.map(c => cardHtml(c, !revealDealer, false, false)).join('');
-  document.getElementById('playerCards').innerHTML = pokPlayer.map(c => cardHtml(c, false, pokPhase === 'exchange', pokSel.has(c.r + '-' + c.s))).join('');
-  // живое название руки игрока (и дилера на шоудауне)
-  const pn = document.getElementById('pokHandName');
-  const dl = document.getElementById('pokDealerLabel');
-  if (pokPlayer.length === 5) {
-    const pe = evalHand(pokPlayer);
-    pn.textContent = '🃏 У тебя: ' + pe.name;
-    pn.style.color = pe.cat >= 4 ? 'var(--gold)' : 'var(--p2)';
-  } else pn.textContent = '';
-  if (revealDealer && pokDealer.length === 5) dl.innerHTML = 'Дилер · <b style="color:var(--gold)">' + evalHand(pokDealer).name + '</b>';
-  else dl.textContent = 'Дилер';
-}
-function evalHand(cards){
-  const rs = cards.map(c => c.r).sort((a, b) => b - a);
-  const counts = {}; rs.forEach(r => counts[r] = (counts[r] || 0) + 1);
-  const groups = Object.keys(counts).map(r => ({ r: +r, c: counts[r] })).sort((a, b) => b.c - a.c || b.r - a.r);
-  const flush = cards.every(c => c.s === cards[0].s);
-  const uniq = [...new Set(rs)].sort((a, b) => b - a);
-  let straight = false, high = uniq[0] || 0;
-  if (uniq.length === 5) {
-    if (uniq[0] - uniq[4] === 4) straight = true;
-    if (uniq[0] === 14 && uniq[1] === 5 && uniq[4] === 2) { straight = true; high = 5; }
-  }
-  let cat;
-  if (straight && flush) cat = (high === 14 ? 9 : 8);
-  else if (groups[0].c === 4) cat = 7;
-  else if (groups[0].c === 3 && groups[1] && groups[1].c === 2) cat = 6;
-  else if (flush) cat = 5;
-  else if (straight) cat = 4;
-  else if (groups[0].c === 3) cat = 3;
-  else if (groups[0].c === 2 && groups[1] && groups[1].c === 2) cat = 2;
-  else if (groups[0].c === 2) cat = 1;
-  else cat = 0;
-  return { cat, vec: [cat, ...groups.flatMap(g => [g.c, g.r])], name: HAND_NAMES[cat] };
-}
-function cmpHands(a, b){
-  for (let i = 0; i < Math.max(a.vec.length, b.vec.length); i++) {
-    const d = (a.vec[i] || 0) - (b.vec[i] || 0);
-    if (d) return d;
-  }
-  return 0;
-}
-function pokMain(){
-  if (pokPhase === 'exchange') { pokExchange(pokSel.size); return; }
-  const bet = takeBet('pokBet'); if (!bet) return;
-  pokAnte = bet; pokDeck = pokNewDeck();
-  pokPlayer = pokDeck.splice(0, 5); pokDealer = pokDeck.splice(0, 5);
-  pokSel = new Set(); pokPhase = 'exchange';
-  pokRender(false);
-  document.getElementById('pokMain').textContent = '🔄 Обменять выбранные';
-  document.getElementById('pokSkip').style.display = 'inline-flex';
-  show('pokRes','info','Обменяй до 3 карт (кликни по ним) или оставь как есть.');
-}
-function pokExchange(n){
-  // игрок
-  if (n > 0) {
-    pokPlayer = pokPlayer.filter(c => { const k = c.r + '-' + c.s;
-      if (pokSel.has(k)) { pokDeck.push(c); return false; } return true; });
-    while (pokPlayer.length < 5) pokPlayer.push(pokDeck.pop());
-  }
-  // дилер: если нет пары или лучше — меняет 3 слабейшие
-  const de = evalHand(pokDealer);
-  if (de.cat === 0) {
-    const worst = [...pokDealer].sort((a, b) => a.r - b.r).slice(0, 3);
-    pokDealer = pokDealer.filter(c => !worst.includes(c));
-    while (pokDealer.length < 5) pokDealer.push(pokDeck.pop());
-  }
-  // шоудаун
-  pokPhase = 'idle'; pokSel = new Set();
-  pokRender(true);
-  const pe = evalHand(pokPlayer), dee = evalHand(pokDealer);
-  const cmp = cmpHands(pe, dee);
-  document.getElementById('pokMain').textContent = '🃏 Сдать карты';
-  document.getElementById('pokSkip').style.display = 'none';
-  if (cmp > 0) {
-    const prize = pokAnte * 2;
-    changeBal(prize, 'Выигрыш в покере: ' + pe.name);
-    show('pokRes','win',`🎉 Ты: <b>${pe.name}</b> · Дилер: ${dee.name}. Победа! +${fmt(prize)} демо ₸`);
-  } else if (cmp === 0) {
-    changeBal(pokAnte, 'Ничья в покере');
-    show('pokRes','info',`🤝 Оба: <b>${pe.name}</b>. Ставка возвращается.`);
-  } else {
-    show('pokRes','lose',`💀 Ты: ${pe.name} · Дилер: <b>${dee.name}</b>. Дилер забирает ${fmt(pokAnte)} ₸`);
-  }
 }
 
 refreshBal();
