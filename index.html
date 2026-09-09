@@ -784,10 +784,10 @@ function closeAccountForever(){
 }
 
 
-renderCabinet();
+try { renderCabinet(); } catch(e) { console.error('cabinet render:', e); }
 
 // ===== LOAN CALC / MODALS =====
-const fmt = n => new Intl.NumberFormat('ru-RU').format(Math.round(n)) + ' ₸';
+function fmt(n){ return new Intl.NumberFormat('ru-RU').format(Math.round(n)) + ' ₸'; }
 let loanMode = 'credit';
 function openLoan(mode){
   loanMode = mode;
