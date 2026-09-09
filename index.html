@@ -123,6 +123,35 @@ section{padding:90px 6vw;max-width:1200px;margin:0 auto}
 footer{padding:40px 6vw 60px;text-align:center;color:var(--text2);font-size:13px;border-top:1px solid var(--line);margin-top:60px}
 footer .logo{justify-content:center;margin-bottom:14px}
 @media(max-width:640px){.nav-links{display:none}}
+
+/* loan modal */
+.loan-overlay{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px;
+  background:rgba(5,5,10,.75);backdrop-filter:blur(10px)}
+.loan-overlay.active{display:flex}
+.loan-box{width:min(460px,94vw);max-height:88vh;overflow-y:auto;background:var(--bg2);border:1px solid var(--line);
+  border-radius:24px;padding:30px;position:relative;box-shadow:0 30px 90px rgba(124,58,237,.35);
+  animation:pop .3s ease}
+@keyframes pop{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.loan-box h3{font-size:20px;margin-bottom:4px}
+.loan-box .sub{color:var(--text2);font-size:13px;margin-bottom:22px}
+.loan-close{position:absolute;top:16px;right:18px;background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer}
+.loan-close:hover{color:#fff}
+.loan-box label{display:block;font-size:12px;color:var(--text2);margin:14px 0 6px}
+.loan-box input[type=number],.loan-box input[type=text]{
+  width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 14px;
+  color:#fff;font-size:15px;outline:none}
+.loan-box input:focus{border-color:var(--p)}
+.loan-sum{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.loan-sum button{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  color:var(--text2);font-size:12px;cursor:pointer;transition:.2s}
+.loan-sum button:hover{border-color:var(--p);color:#fff}
+.loan-result{margin-top:20px;padding:18px;border-radius:16px;background:rgba(124,58,237,.1);border:1px solid var(--line);text-align:center}
+.loan-result b{display:block;font-size:28px;font-weight:800;color:var(--p2);margin-top:4px}
+.loan-result span{font-size:12px;color:var(--text2)}
+.loan-ok{display:none;text-align:center;padding:30px 10px}
+.loan-ok .big{font-size:52px;margin-bottom:12px}
+.loan-ok h4{font-size:19px;margin-bottom:8px}
+.loan-ok p{color:var(--text2);font-size:13px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -131,6 +160,7 @@ footer .logo{justify-content:center;margin-bottom:14px}
   <a class="logo" href="#"><span class="logo-badge">П</span>PenkovBank</a>
   <div class="nav-links">
     <a href="#cards">Карты</a>
+    <a href="#credits">Кредиты</a>
     <a href="#features">Возможности</a>
     <a href="#tariffs">Тарифы</a>
     <a href="#faq">FAQ</a>
@@ -235,6 +265,34 @@ footer .logo{justify-content:center;margin-bottom:14px}
   </div>
 </section>
 
+
+<section id="credits">
+  <div class="sec-head">
+    <h2>Кредиты PenkovBank</h2>
+    <p>Занимаем честно: без скрытых страховок и мелкого шрифта. Калькулятор покажет платёж до заявки.</p>
+  </div>
+  <div class="grid g3">
+    <div class="tile">
+      <div class="ico">💰</div>
+      <h3>Кредит наличными</h3>
+      <p>До 20 000 000 ₸ под 12% годовых. Решение за 2 минуты, деньги сразу на карту.</p>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:18px" onclick="openLoan('credit')">Взять кредит</button>
+    </div>
+    <div class="tile">
+      <div class="ico">🏠</div>
+      <h3>Ипотека</h3>
+      <p>От 8% годовых, до 25 лет, первый взнос от 10%. Квартира мечты ближе, чем кажется.</p>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:18px" onclick="openLoan('mortgage')">Взять ипотеку</button>
+    </div>
+    <div class="tile">
+      <div class="ico">✅</div>
+      <h3>Погашение</h3>
+      <p>Внеси платёж по кредиту PenkovBank — зачисление мгновенное, без похода в отделение.</p>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:18px" onclick="openLoan('repay')">Оплатить кредит</button>
+    </div>
+  </div>
+</section>
+
 <section id="tariffs">
   <div class="sec-head">
     <h2>Тарифы</h2>
@@ -315,12 +373,99 @@ footer .logo{justify-content:center;margin-bottom:14px}
   <div style="margin-top:6px;opacity:.6">Демонстрационный проект. Банковская лицензия — дело времени.</div>
 </footer>
 
+<div class="loan-overlay" id="loanOverlay" onclick="if(event.target===this)closeLoan()">
+  <div class="loan-box">
+    <button class="loan-close" onclick="closeLoan()">×</button>
+    <div id="loanFormWrap">
+      <h3 id="loanTitle"></h3>
+      <div class="sub" id="loanSub"></div>
+      <div id="loanFields"></div>
+    </div>
+    <div class="loan-ok" id="loanOk">
+      <div class="big">🎉</div>
+      <h4 id="loanOkTitle"></h4>
+      <p id="loanOkText"></p>
+    </div>
+  </div>
+</div>
+
 <script>
 function pick(t){
   const b=event.target; b.textContent='✅ ' + t + ' — заявка принята!';
   b.disabled=true; b.style.opacity=.85;
   setTimeout(()=>{b.textContent='Спасибо! Мы на связи 🚀';},1800);
 }
+// ===== LOAN CALC / MODALS =====
+const fmt = n => new Intl.NumberFormat('ru-RU').format(Math.round(n)) + ' ₸';
+let loanMode = 'credit';
+function openLoan(mode){
+  loanMode = mode;
+  document.getElementById('loanFormWrap').style.display = 'block';
+  document.getElementById('loanOk').style.display = 'none';
+  const T = {credit:['Взять кредит','Кредит наличными · до 20 000 000 ₸ · от 12% годовых',12,60,5_000_000,20000000],
+             mortgage:['Взять ипотеку','Ипотека · от 8% годовых · до 25 лет',8,300,20_000_000,200_000_000],
+             repay:['Оплатить кредит','Погашение кредита PenkovBank',null,null,null,null]}[mode];
+  document.getElementById('loanTitle').textContent = T[0];
+  document.getElementById('loanSub').textContent = T[1];
+  const F = document.getElementById('loanFields');
+  if (mode === 'repay') {
+    F.innerHTML = `
+      <label>Номер кредитного договора</label>
+      <input type="text" id="lpNum" placeholder="PB-2026-000000" style="letter-spacing:1px">
+      <label>Сумма платежа</label>
+      <input type="number" id="lpSum" placeholder="Например: 50 000" min="1">
+      <label>Карта списания</label>
+      <input type="text" id="lpCard" placeholder="5300 •••• •••• 7777" style="letter-spacing:1px">
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:22px" onclick="repayLoan()">Оплатить</button>`;
+  } else {
+    const isMort = mode === 'mortgage';
+    F.innerHTML = `
+      <label>Сумма ${isMort ? 'недвижимости' : 'кредита'}</label>
+      <input type="number" id="lsSum" value="${isMort ? 20000000 : 5000000}" min="100000">
+      <div class="loan-sum" id="sumQuick"></div>
+      <label>Срок, ${isMort ? 'лет' : 'месяцев'}</label>
+      <input type="number" id="lsTerm" value="${isMort ? 15 : 36}" min="${isMort ? 1 : 3}" max="${isMort ? 25 : 84}">
+      <div class="loan-result"><span>Ежемесячный платёж (аннуитет)</span><b id="lsPay">—</b>
+      <span id="lsTotal" style="display:block;margin-top:6px"></span></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:20px" onclick="applyLoan()">Оформить заявку</button>`;
+    const sums = isMort ? [15000000,20000000,30000000,50000000] : [500000,1000000,3000000,5000000];
+    document.getElementById('sumQuick').innerHTML = sums.map(v=>`<button onclick="document.getElementById('lsSum').value=${v};calcLoan()">${new Intl.NumberFormat('ru-RU').format(v/1000000)} млн</button>`).join('');
+    ['lsSum','lsTerm'].forEach(id=>document.getElementById(id).addEventListener('input', calcLoan));
+    calcLoan();
+  }
+  document.getElementById('loanOverlay').classList.add('active');
+}
+function calcLoan(){
+  const sum = +document.getElementById('lsSum').value || 0;
+  const term = +document.getElementById('lsTerm').value || 1;
+  const rate = (loanMode === 'mortgage' ? 8 : 12) / 100 / 12;
+  const n = loanMode === 'mortgage' ? term * 12 : term;
+  const pay = rate ? sum * rate * Math.pow(1+rate, n) / (Math.pow(1+rate, n) - 1) : sum / n;
+  document.getElementById('lsPay').textContent = fmt(pay);
+  document.getElementById('lsTotal').textContent = 'Всего за ' + (loanMode==='mortgage'? term + ' лет' : term + ' мес') + ': ' + fmt(pay * n) + ' · переплата ' + fmt(pay*n - sum);
+}
+function applyLoan(){
+  const sum = +document.getElementById('lsSum').value;
+  const pay = document.getElementById('lsPay').textContent;
+  showOk('Заявка принята! 🎉',
+    'На сумму ' + fmt(sum) + ' с платежом ' + pay + ' в месяц.<br>Решение придёт в SMS и push — обычно за 2 минуты.<br>Спасиб за доверие, клиент PenkovBank 💜');
+}
+function repayLoan(){
+  const num = document.getElementById('lpNum').value.trim();
+  const sum = +document.getElementById('lpSum').value;
+  const card = document.getElementById('lpCard').value.trim();
+  if (!num || !sum || !card) { alert('Заполни все три поля 🙂'); return; }
+  showOk('Платёж отправлен!',
+    fmt(sum) + ' по договору ' + num + ' зачислится мгновенно.<br>Чек — в приложении PenkovBank.<br>Кредит гасится, свобода приближается ✨');
+}
+function showOk(title, text){
+  document.getElementById('loanFormWrap').style.display = 'none';
+  document.getElementById('loanOk').style.display = 'block';
+  document.getElementById('loanOkTitle').textContent = title;
+  document.getElementById('loanOkText').innerHTML = text;
+}
+function closeLoan(){ document.getElementById('loanOverlay').classList.remove('active'); }
+
 // лёгкий параллакс свечения
 document.addEventListener('mousemove',e=>{
   const x=(e.clientX/innerWidth-.5), y=(e.clientY/innerHeight-.5);
