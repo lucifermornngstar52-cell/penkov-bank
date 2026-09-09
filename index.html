@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PenkovBank — банк нового поколения</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%237c3aed'/><text x='50' y='70' font-size='58' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>П</text></svg>">
+<style>
+:root{
+  --bg:#0b0b12; --bg2:#12121c; --card:#161626; --line:rgba(124,58,237,.22);
+  --p:#7c3aed; --p2:#a78bfa; --text:#e8e8f0; --text2:#9a9ab0; --ok:#34d399; --gold:#fbbf24;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;
+  background-image:radial-gradient(rgba(124,58,237,.14) 1px,transparent 1px);background-size:26px 26px}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--p);color:#fff}
+
+/* nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 6vw;backdrop-filter:blur(16px);background:rgba(11,11,18,.72);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:.3px}
+.logo-badge{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,var(--p),#4c1d95);
+  display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;
+  box-shadow:0 0 24px rgba(124,58,237,.5)}
+.nav-links{display:flex;gap:28px;font-size:14px;color:var(--text2)}
+.nav-links a:hover{color:var(--p2)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:14px;border:none;cursor:pointer;
+  font-size:14px;font-weight:600;transition:.25s}
+.btn-primary{background:linear-gradient(135deg,var(--p),#6d28d9);color:#fff;box-shadow:0 4px 24px rgba(124,58,237,.35)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(124,58,237,.5)}
+.btn-ghost{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--line)}
+.btn-ghost:hover{border-color:var(--p)}
+.btn-lg{padding:16px 30px;font-size:16px;border-radius:16px}
+
+/* hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+  padding:120px 6vw 60px;position:relative}
+.glow{position:absolute;border-radius:50%;filter:blur(120px);opacity:.35;pointer-events:none}
+.glow-1{width:480px;height:480px;background:var(--p);top:-120px;left:8vw}
+.glow-2{width:380px;height:380px;background:#4c1d95;bottom:-80px;right:6vw}
+.tag{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:999px;font-size:13px;color:var(--p2);
+  background:rgba(124,58,237,.1);border:1px solid var(--line);margin-bottom:28px}
+.tag .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:clamp(42px,7vw,84px);font-weight:800;line-height:1.05;letter-spacing:-1.5px;max-width:900px}
+h1 .grad{background:linear-gradient(135deg,var(--p2),var(--p));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p.sub{color:var(--text2);font-size:clamp(15px,2vw,19px);max-width:560px;margin:26px 0 40px;line-height:1.6}
+.hero-cta{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.hero-note{margin-top:22px;font-size:13px;color:var(--text2)}
+
+/* bank card visual */
+.card-showcase{margin-top:70px;perspective:1200px}
+.bank-card{width:min(380px,80vw);aspect-ratio:1.586;border-radius:22px;padding:26px;position:relative;text-align:left;
+  background:linear-gradient(135deg,#241243,#0f0f1d 60%,#1c1140);border:1px solid rgba(167,139,250,.35);
+  box-shadow:0 24px 70px rgba(124,58,237,.4),inset 0 1px 0 rgba(255,255,255,.12);
+  transform:rotateX(12deg) rotateZ(-4deg);transition:.5s;animation:float 6s ease-in-out infinite}
+.card-showcase:hover .bank-card{transform:rotateX(0) rotateZ(0)}
+@keyframes float{0%,100%{translate:0 0}50%{translate:0 -14px}}
+.bank-card .chip{width:44px;height:34px;border-radius:8px;background:linear-gradient(135deg,#fde68a,#d97706);margin-bottom:auto}
+.bank-card .brand{position:absolute;top:26px;right:26px;font-weight:800;letter-spacing:2px;font-size:15px;color:var(--p2)}
+.bank-card .num{font-family:'Courier New',monospace;font-size:clamp(16px,4vw,21px);letter-spacing:3px;margin:38px 0 18px;color:#fff}
+.bank-card .row{display:flex;justify-content:space-between;align-items:flex-end}
+.bank-card .holder{font-size:12px;color:var(--text2)}
+.bank-card .holder b{display:block;font-size:15px;color:#fff;letter-spacing:1.5px;margin-top:4px;text-transform:uppercase}
+.bank-card .valid{font-size:12px;color:var(--text2);text-align:right}
+.bank-card .valid b{display:block;font-size:15px;color:#fff;margin-top:4px}
+.bank-card .mc{position:absolute;right:26px;bottom:26px;width:44px;height:44px}
+.bank-card .mc i{position:absolute;width:22px;height:22px;border-radius:50%;top:11px}
+.bank-card .mc i:first-child{left:0;background:#ea1c2d}
+.bank-card .mc i:last-child{left:22px;background:#f79e1b;mix-blend-mode:hard-light}
+
+/* sections */
+section{padding:90px 6vw;max-width:1200px;margin:0 auto}
+.sec-head{text-align:center;margin-bottom:56px}
+.sec-head h2{font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-1px}
+.sec-head p{color:var(--text2);margin-top:14px;font-size:16px}
+.grid{display:grid;gap:20px}
+.g3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+
+.tile{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:30px;transition:.3s;position:relative;overflow:hidden}
+.tile:hover{transform:translateY(-6px);border-color:rgba(167,139,250,.5);box-shadow:0 14px 44px rgba(124,58,237,.25)}
+.tile .ico{width:52px;height:52px;border-radius:15px;background:rgba(124,58,237,.14);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px}
+.tile h3{font-size:18px;margin-bottom:10px}
+.tile p{color:var(--text2);font-size:14px;line-height:1.6}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;padding:34px;border-radius:24px;
+  background:var(--card);border:1px solid var(--line)}
+.stat{text-align:center}
+.stat b{display:block;font-size:clamp(28px,3.6vw,42px);font-weight:800;background:linear-gradient(135deg,#fff,var(--p2));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.stat span{font-size:13px;color:var(--text2)}
+
+/* tariffs */
+.tariff{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:36px;display:flex;flex-direction:column}
+.tariff.hot{border-color:var(--p);box-shadow:0 0 50px rgba(124,58,237,.3);position:relative}
+.tariff .ribbon{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--p),#6d28d9);
+  padding:5px 16px;border-radius:999px;font-size:12px;font-weight:700;color:#fff}
+.tariff h3{font-size:20px;margin-bottom:6px}
+.tariff .price{font-size:38px;font-weight:800;margin:16px 0}
+.tariff .price small{font-size:14px;color:var(--text2);font-weight:400}
+.tariff ul{list-style:none;margin:20px 0 30px;flex:1}
+.tariff li{padding:9px 0;font-size:14px;color:var(--text2);display:flex;gap:10px;align-items:center}
+.tariff li::before{content:'✓';color:var(--ok);font-weight:700}
+.tariff .btn{justify-content:center}
+
+/* faq */
+.faq details{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 24px;margin-bottom:12px;cursor:pointer}
+.faq summary{font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.faq summary::after{content:'+';font-size:22px;color:var(--p2);transition:.3s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{color:var(--text2);font-size:14px;line-height:1.65;margin-top:12px}
+
+/* cta band */
+.band{margin:40px auto 0;max-width:1200px;padding:60px 6vw;text-align:center;border-radius:28px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(76,29,149,.1));border:1px solid var(--line)}
+.band h2{font-size:clamp(26px,4vw,40px);font-weight:800}
+.band p{color:var(--text2);margin:14px 0 30px}
+
+footer{padding:40px 6vw 60px;text-align:center;color:var(--text2);font-size:13px;border-top:1px solid var(--line);margin-top:60px}
+footer .logo{justify-content:center;margin-bottom:14px}
+@media(max-width:640px){.nav-links{display:none}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="#"><span class="logo-badge">П</span>PenkovBank</a>
+  <div class="nav-links">
+    <a href="#cards">Карты</a>
+    <a href="#features">Возможности</a>
+    <a href="#tariffs">Тарифы</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <a href="#tariffs" class="btn btn-primary">Открыть счёт</a>
+</nav>
+
+<header class="hero">
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+  <div class="tag"><span class="dot"></span> Лицензия выдана лично Никитой Пеньковым</div>
+  <h1>Банк, который <span class="grad">на твоей стороне</span></h1>
+  <p class="sub">PenkovBank — цифровой банк нового поколения. Переводы без комиссий, кешбэк до 15% и обслуживание, за которое не стыдно брать деньги.</p>
+  <div class="hero-cta">
+    <a href="#tariffs" class="btn btn-primary btn-lg">💳 Открыть карту</a>
+    <a href="#features" class="btn btn-ghost btn-lg">Узнать больше</a>
+  </div>
+  <div class="hero-note">Бесплатное обслуживание · Без скрытых комиссий · 24/7</div>
+  <div class="card-showcase">
+    <div class="bank-card">
+      <div class="chip"></div>
+      <div class="brand">PENKOV<span style="color:var(--text2)">BANK</span></div>
+      <div class="num">5300 •••• •••• 7777</div>
+      <div class="row">
+        <div class="holder">Владелец<b>Nikita Penkov</b></div>
+        <div class="valid">Срок<b>∞</b></div>
+      </div>
+      <div class="mc"><i></i><i></i></div>
+    </div>
+  </div>
+</header>
+
+<section id="stats-sec" style="padding-top:20px">
+  <div class="stats">
+    <div class="stat"><b>0 ₸</b><span>комиссия за переводы</span></div>
+    <div class="stat"><b>15%</b><span>кешбэк на всё</span></div>
+    <div class="stat"><b>16%</b><span>на накопительный счёт</span></div>
+    <div class="stat"><b>24/7</b><span>поддержка без ботов</span></div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="sec-head">
+    <h2>Почему PenkovBank?</h2>
+    <p>Мы не строим филиалы — мы строим банк, который помещается в кармане.</p>
+  </div>
+  <div class="grid g3">
+    <div class="tile">
+      <div class="ico">⚡</div>
+      <h3>Мгновенные переводы</h3>
+      <p>По номеру телефона за 3 секунды. Без комиссии, без лимитов «на первую тысячу», без сюрпризов в конце месяца.</p>
+    </div>
+    <div class="tile">
+      <div class="ico">💸</div>
+      <h3>Кешбэк рублями</h3>
+      <p>Не баллы, не «юпочки» и не бонусы, которые сгорают. Настоящие деньги, которые сразу можно потратить.</p>
+    </div>
+    <div class="tile">
+      <div class="ico">🔒</div>
+      <h3>Данные под замком</h3>
+      <p>Шифрование уровня военных, вход по биометрии и уведомления о каждой операции быстрее, чем ты моргнёшь.</p>
+    </div>
+    <div class="tile">
+      <div class="ico">📈</div>
+      <h3>Накопительный счёт</h3>
+      <p>16% годовых с ежедневной капитализацией. Копи на мечту, пока спишь — деньги работают за тебя.</p>
+    </div>
+    <div class="tile">
+      <div class="ico">🌙</div>
+      <h3>Тёмная тема везде</h3>
+      <p>Единственный банк, чей интерфейс не жжёт глаза в 3 часа ночи. Дизайн, за который не стыдно.</p>
+    </div>
+    <div class="tile">
+      <div class="ico">🤝</div>
+      <h3>Живая поддержка</h3>
+      <p>Никаких «ваш звонок очень важен». Пишешь — отвечаем. Среднее время ответа: 47 секунд.</p>
+    </div>
+  </div>
+</section>
+
+<section id="cards">
+  <div class="sec-head">
+    <h2>Карты PenkovBank</h2>
+    <p>Три карты — три характера. Выбери свою.</p>
+  </div>
+  <div class="grid g3">
+    <div class="tile">
+      <div class="ico" style="font-size:34px">💜</div>
+      <h3>Violet</h3>
+      <p>Базовая карта для everyday: бесплатное обслуживание, кешбэк 5% на кафе и транспорт, переводы без комиссии.</p>
+    </div>
+    <div class="tile">
+      <div class="ico" style="font-size:34px">🌌</div>
+      <h3>Nebula</h3>
+      <p>Для тех, кто живёт на полную: кешбэк 10% на всё, приоритетная поддержка и бесплатное снятие в любых банкоматах мира.</p>
+    </div>
+    <div class="tile">
+      <div class="ico" style="font-size:34px">🖤</div>
+      <h3>Obsidian</h3>
+      <p>Чёрная карта для избранных: персональный менеджер, кешбэк 15%, доступ в бизнес-залы и металлический корпус карты.</p>
+    </div>
+  </div>
+</section>
+
+<section id="tariffs">
+  <div class="sec-head">
+    <h2>Тарифы</h2>
+    <p>Честно и прозрачно. Что написано — то и платишь.</p>
+  </div>
+  <div class="grid g3">
+    <div class="tariff">
+      <h3>Старт</h3>
+      <span style="color:var(--text2);font-size:13px">для первого знакомства</span>
+      <div class="price">0 ₸ <small>/ месяц</small></div>
+      <ul>
+        <li>Обслуживание карты — бесплатно</li>
+        <li>Кешбэк 5% на избранное</li>
+        <li>Переводы без комиссии</li>
+        <li>Накопительный счёт 12%</li>
+      </ul>
+      <button class="btn btn-ghost" onclick="pick('Старт')">Выбрать</button>
+    </div>
+    <div class="tariff hot">
+      <div class="ribbon">🔥 Выбор 87% клиентов</div>
+      <h3>Премиум</h3>
+      <span style="color:var(--text2);font-size:13px">максимум за свои деньги</span>
+      <div class="price">990 ₸ <small>/ месяц</small></div>
+      <ul>
+        <li>Кешбэк 12% на всё</li>
+        <li>Накопительный счёт 16%</li>
+        <li>Бесплатные снятия по всему миру</li>
+        <li>Приоритетная поддержка 24/7</li>
+      </ul>
+      <button class="btn btn-primary" onclick="pick('Премиум')">Выбрать</button>
+    </div>
+    <div class="tariff">
+      <h3>Obsidian</h3>
+      <span style="color:var(--text2);font-size:13px">для тех, кто решает</span>
+      <div class="price">4 990 ₸ <small>/ месяц</small></div>
+      <ul>
+        <li>Кешбэк 15% без лимитов</li>
+        <li>Персональный менеджер</li>
+        <li>Бизнес-залы в аэропортах</li>
+        <li>Металлическая карта</li>
+      </ul>
+      <button class="btn btn-ghost" onclick="pick('Obsidian')">Выбрать</button>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="faq">
+  <div class="sec-head">
+    <h2>Частые вопросы</h2>
+  </div>
+  <details>
+    <summary>Это настоящий банк?</summary>
+    <p>Это демонстрационный сайт в портфолио Penkov Digital. Выглядит как банк, пахнет как банк, но лицензию ЦБ пока не получил — работаем над этим 😉</p>
+  </details>
+  <details>
+    <summary>Почему кешбэк 15%? Так не бывает</summary>
+    <p>Бывает, если не тратить бюджет на филиалы с мраморными полами и золотыми ручками. У нас весь банк — это код.</p>
+  </details>
+  <details>
+    <summary>Как открыть карту?</summary>
+    <p>Нажми «Открыть карту», выбери тариф — и всё. Карта будет виртуальной, так что придёт мгновенно. Пластик по желанию.</p>
+  </details>
+  <details>
+    <summary>Мои деньги в безопасности?</summary>
+    <p>Каждая операция подтверждается биометрией, а все данные зашифрованы. Плюс у нас нет ни одного филиала, который можно ограбить.</p>
+  </details>
+</section>
+
+<div class="band">
+  <h2>Готов стать клиентом PenkovBank?</h2>
+  <p>Присоединяйся первым — первые 1000 клиентов получают карту Obsidian бесплатно.</p>
+  <a href="#tariffs" class="btn btn-primary btn-lg">🚀 Открыть счёт за 2 минуты</a>
+</div>
+
+<footer>
+  <div class="logo"><span class="logo-badge">П</span>PenkovBank</div>
+  <div>© 2026 PenkovBank. Сделано с 💜 и без единого филиала.</div>
+  <div style="margin-top:6px;opacity:.6">Демонстрационный проект. Банковская лицензия — дело времени.</div>
+</footer>
+
+<script>
+function pick(t){
+  const b=event.target; b.textContent='✅ ' + t + ' — заявка принята!';
+  b.disabled=true; b.style.opacity=.85;
+  setTimeout(()=>{b.textContent='Спасибо! Мы на связи 🚀';},1800);
+}
+// лёгкий параллакс свечения
+document.addEventListener('mousemove',e=>{
+  const x=(e.clientX/innerWidth-.5), y=(e.clientY/innerHeight-.5);
+  document.querySelectorAll('.glow').forEach((g,i)=>{
+    g.style.translate = `${x*(i?-30:30)}px ${y*(i?-24:24)}px`;
+  });
+});
+</script>
+</body>
+</html>
