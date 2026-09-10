@@ -1,11 +1,25 @@
 {
   "accounts": [
     {
+      "num": "PB-535279986311",
+      "name": "Данил",
+      "balance": 10001000,
+      "tier": "Obsidian",
+      "lastSeen": 1789040998134
+    },
+    {
+      "num": "PB-572147020873",
+      "name": "Варя",
+      "balance": 14999999989901000,
+      "tier": "Diamond",
+      "lastSeen": 1789040972842
+    },
+    {
       "num": "PB-730326180550",
       "name": "Никита",
-      "balance": 412384,
+      "balance": 500000,
       "tier": "Gold",
-      "lastSeen": 1789031106236
+      "lastSeen": 1789040876455
     },
     {
       "num": "PB-788885156159",
@@ -26,7 +40,7 @@
       "name": "Человек",
       "balance": 9.811111033098042e+22,
       "tier": "Diamond",
-      "lastSeen": 1789028771181
+      "lastSeen": 1789029123233
     }
   ]
 }
