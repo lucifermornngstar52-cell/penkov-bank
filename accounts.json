@@ -1,6 +1,13 @@
 {
   "accounts": [
     {
+      "num": "PB-636673910918",
+      "name": "Руслан",
+      "balance": 1000200,
+      "tier": "Platinum",
+      "lastSeen": 1789043567147
+    },
+    {
       "num": "PB-535279986311",
       "name": "Данил",
       "balance": 100000,
@@ -20,13 +27,6 @@
       "balance": 6000,
       "tier": "Violet",
       "lastSeen": 1789042938790
-    },
-    {
-      "num": "PB-636673910918",
-      "name": "Руслан",
-      "balance": 100000,
-      "tier": "Gold",
-      "lastSeen": 1789042887908
     },
     {
       "num": "PB-687356918541",
