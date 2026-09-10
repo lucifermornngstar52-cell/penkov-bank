@@ -946,6 +946,8 @@ function closeAccountForever(){
 
 
 try { renderCabinet(); } catch(e) { console.error('cabinet render:', e); }
+// снапшот счёта в реестр админки при каждом заходе на сайт
+if (getAcct()) setTimeout(publishAcc, 1500);
 
 // ===== LOAN CALC / MODALS =====
 function fmt(n){ return new Intl.NumberFormat('ru-RU').format(Math.round(n)) + ' ₸'; }
