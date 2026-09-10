@@ -1,3 +1,18 @@
 {
-  "accounts": []
+  "accounts": [
+    {
+      "num": "PB-788885156159",
+      "name": "Тест Е2Е",
+      "balance": 0,
+      "tier": "Violet",
+      "lastSeen": 1789030770348
+    },
+    {
+      "num": "PB-687356918541",
+      "name": "Тимофей",
+      "balance": 500000001000,
+      "tier": "Diamond",
+      "lastSeen": 1789030183671
+    }
+  ]
 }
