@@ -1,6 +1,20 @@
 {
   "accounts": [
     {
+      "num": "PB-687356918541",
+      "name": "Тимофей",
+      "balance": 100000,
+      "tier": "Gold",
+      "lastSeen": 1789042872581
+    },
+    {
+      "num": "PB-551280611067",
+      "name": "Тест Обновление",
+      "balance": 1000,
+      "tier": "Violet",
+      "lastSeen": 1789042858471
+    },
+    {
       "num": "PB-572147020873",
       "name": "Варя",
       "balance": 100000,
@@ -41,13 +55,6 @@
       "balance": 0,
       "tier": "Violet",
       "lastSeen": 1789030770348
-    },
-    {
-      "num": "PB-687356918541",
-      "name": "Тимофей",
-      "balance": 100000,
-      "tier": "Gold",
-      "lastSeen": 1789042872581
     },
     {
       "num": "PB-792379354846",
