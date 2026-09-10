@@ -1,1 +1,11 @@
-{ "accounts": [] }
+{
+  "accounts": [
+    {
+      "num": "PB-788885156159",
+      "name": "Тест Е2Е",
+      "balance": 0,
+      "tier": "Violet",
+      "lastSeen": 1789029558346
+    }
+  ]
+}
