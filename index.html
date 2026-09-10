@@ -816,7 +816,7 @@ async function fetchCredits(){
   const r = await fetch(GH_API + '?t=' + Date.now());
   if (!r.ok) return { sha: null, credits: [] };
   const d = await r.json();
-  const content = d.content ? JSON.parse(atob(d.content.replace(/\n/g, ''))) : { credits: [] };
+  const content = d.content ? JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(d.content.replace(/\n/g, '')), ch => ch.charCodeAt(0)))) : { credits: [] };
   return { sha: d.sha, credits: content.credits || [] };
 }
 

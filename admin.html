@@ -304,7 +304,7 @@ async function fetchCredits(){
   const r = await fetch(GH_API + '?t=' + Date.now(), { headers: ghHeaders() });
   if (!r.ok) throw new Error('GitHub ' + r.status);
   const d = await r.json();
-  const content = d.content ? JSON.parse(atob(d.content.replace(/\n/g, ''))) : { credits: [] };
+  const content = d.content ? JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(d.content.replace(/\n/g, '')), ch => ch.charCodeAt(0)))) : { credits: [] };
   return { sha: d.sha, credits: content.credits || [] };
 }
 async function putCredits(credits, sha, message){
@@ -354,7 +354,7 @@ async function fetchAccountsFile(){
   const r = await fetch(GH_API_ACC + '?t=' + Date.now(), { headers: ghHeaders() });
   if (!r.ok) return { sha: null, accounts: [] };
   const d = await r.json();
-  const content = d.content ? JSON.parse(atob(d.content.replace(/\n/g, ''))) : { accounts: [] };
+  const content = d.content ? JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(d.content.replace(/\n/g, '')), ch => ch.charCodeAt(0)))) : { accounts: [] };
   return { sha: d.sha, accounts: content.accounts || [] };
 }
 async function putAccounts(accounts, sha, message){
