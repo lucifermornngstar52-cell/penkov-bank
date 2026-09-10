@@ -460,6 +460,15 @@ body.logged nav .nav-links{display:none!important}
   </div>
 </div>
 
+<div class="loan-overlay" id="depOverlay" onclick="if(event.target===this)closeDep()">
+  <div class="loan-box">
+    <button class="loan-close" onclick="closeDep()">×</button>
+    <h3>🏦 Депозит HikariOS Bank</h3>
+    <div class="sub">До 18% годовых · проценты капитализируются ежедневно</div>
+    <div id="depBody"></div>
+  </div>
+</div>
+
 <div class="loan-overlay" id="trOverlay" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="loan-box">
     <button class="loan-close" onclick="document.getElementById('trOverlay').classList.remove('active')">×</button>
@@ -582,9 +591,99 @@ function createAccount(){
     { op: 'Приветственный бонус', sum: 1000, date: Date.now() }
   ]});
   pendingPlan = null;
+  publishAcc();
   document.getElementById('acctOverlay').classList.remove('active');
   renderCabinet();
   document.getElementById('account').scrollIntoView({behavior:'smooth'});
+}
+
+// ===== ДЕПОЗИТ =====
+const DEP_TERMS = [
+  {months:3, rate:14, label:'3 месяца'},
+  {months:6, rate:16, label:'6 месяцев'},
+  {months:12, rate:18, label:'12 месяцев'},
+];
+let depTermIdx = 0;
+
+function accrueDeposit(a){
+  const d = a.deposit; if (!d) return 0;
+  const now = Date.now();
+  const days = (now - d.lastAccrual) / 86400000;
+  if (days < 1/24) return 0;
+  const interest = Math.floor(d.sum * d.rate / 100 * days / 365);
+  if (interest > 0) { d.sum += interest; d.accrued = (d.accrued || 0) + interest; }
+  d.lastAccrual = now;
+  return interest;
+}
+
+function openDep(){
+  const a = getAcct();
+  if (!a) { alert('Сначала открой счёт в разделе «Личный кабинет» 🙂'); document.getElementById('account').scrollIntoView({behavior:'smooth'}); return; }
+  accrueDeposit(a); saveAcct(a); renderCabinet();
+  const B = document.getElementById('depBody');
+  const d = a.deposit;
+  if (!d) {
+    B.innerHTML = `
+      <label>Сумма депозита (мин. 1 000 ₸, максимум — твой баланс)</label>
+      <input type="number" id="depSum" placeholder="Например: 100000" min="1000">
+      <label style="margin-top:16px">Срок и ставка</label>
+      <div style="display:flex;gap:10px;margin-top:8px">${DEP_TERMS.map((t,i) =>
+        `<button class="btn btn-ghost" style="flex:1;justify-content:center;font-size:13px${i===depTermIdx?';border-color:var(--p);color:var(--p2)':''}" onclick="depTermIdx=${i};openDep()">${t.label}<br>${t.rate}% годовых</button>`).join('')}</div>
+      <p style="font-size:12.5px;color:var(--text2);margin-top:14px">Проценты начисляются ежедневно и капитализируются в депозит. Досрочное закрытие — только тело депозита, проценты сгорают.</p>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:16px" onclick="openDepositDo()">🏦 Открыть депозит</button>`;
+  } else {
+    const matured = Date.now() >= d.endsAt;
+    B.innerHTML = `
+      <div style="text-align:center;padding:18px 0">
+        <div style="font-size:15px;color:var(--text2)">На депозите</div>
+        <div style="font-size:34px;font-weight:800;color:var(--ok)">${fmt(d.sum)}</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:6px">${d.rate}% годовых · ${d.months} мес. · начислено ${fmt(d.accrued || 0)}</div>
+        <div style="font-size:13px;margin-top:6px">${matured ? '<b style="color:var(--ok)">Срок завершён — проценты сохранены ✅</b>' : 'До конца срока: <b>' + Math.max(0, Math.ceil((d.endsAt - Date.now()) / 86400000)) + ' дн.</b>'}</div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="closeDepositDo()">Забрать депозит</button>
+      <p style="font-size:12.5px;color:var(--text2);margin-top:12px">${matured ? 'Вернётся тело + все проценты.' : 'Досрочно: вернётся только тело (' + fmt(d.body) + '), проценты сгорают.'}</p>`;
+  }
+  document.getElementById('depOverlay').classList.add('active');
+}
+function closeDep(){ document.getElementById('depOverlay').classList.remove('active'); }
+
+function openDepositDo(){
+  const a = getAcct(); if (!a) return;
+  const sum = Math.floor(Number(document.getElementById('depSum').value) || 0);
+  if (sum < 1000) { alert('Минимальная сумма депозита — 1 000 ₸'); return; }
+  if (sum > a.balance) { alert('Недостаточно средств: на счету ' + fmt(a.balance)); return; }
+  const t = DEP_TERMS[depTermIdx];
+  a.balance -= sum;
+  a.deposit = { body: sum, sum, rate: t.rate, months: t.months, openedAt: Date.now(), lastAccrual: Date.now(), accrued: 0, endsAt: Date.now() + t.months * 30 * 86400000 };
+  a.history.push({ op: '🏦 Депозит открыт: ' + t.label + ' · ' + t.rate + '% годовых', sum: -sum, date: Date.now() });
+  saveAcct(a); renderCabinet(); publishAcc(); closeDep();
+  alert('Депозит открыт: ' + fmt(sum) + ' под ' + t.rate + '% годовых 🏦\nПроценты капитализируются при каждом обновлении баланса.');
+}
+
+function closeDepositDo(){
+  const a = getAcct(); if (!a || !a.deposit) return;
+  const d = a.deposit;
+  const matured = Date.now() >= d.endsAt;
+  if (!matured && !confirm('Срок ещё не вышел. Досрочно вернётся только тело (' + fmt(d.body) + '), начисленные проценты сгорают. Закрыть?')) return;
+  const payout = matured ? d.sum : d.body;
+  a.balance += payout;
+  a.history.push({ op: matured ? '🏦 Депозит закрыт: тело + проценты' : '🏦 Депозит закрыт досрочно: проценты сгорели', sum: payout, date: Date.now() });
+  a.deposit = null;
+  saveAcct(a); renderCabinet(); publishAcc(); closeDep();
+  alert((matured ? '🎉 Депозит выплачен: ' : 'Депозит возвращён: ') + fmt(payout));
+}
+
+// ===== СИНХРОНИЗАЦИЯ СЧЕТА (снапшоты для админ-панели) =====
+const NTFY_ACC = 'hikarios-acc-v7q2m';
+async function publishAcc(){
+  const a = getAcct(); if (!a) return;
+  try { await fetch('https://ntfy.sh/' + NTFY_ACC, { method: 'POST', body: JSON.stringify({
+    kind: 'acc', num: a.num, name: a.name, balance: a.balance, tier: tierOf(a.balance).name, ts: Date.now()
+  })}); } catch(e) {}
+}
+async function publishAccClosed(){
+  const a = getAcct(); if (!a) return;
+  try { await fetch('https://ntfy.sh/' + NTFY_ACC, { method: 'POST', body: JSON.stringify({ kind: 'acc_closed', num: a.num }) }); } catch(e) {}
 }
 
 // ===== ХРАНИЛИЩЕ БАНКА (общее для всех игроков) =====
@@ -675,6 +774,7 @@ function renderCabinet(){
         <button class="btn btn-primary" onclick="openTransferModal()">💸 Перевести</button>
         <button class="btn btn-primary" onclick="openLoan('credit')">💰 Взять кредит</button>
         <button class="btn btn-primary" onclick="openLoan('mortgage')">🏠 Ипотека</button>
+        <button class="btn btn-primary" onclick="openDep()">🏦 Депозит</button>
         <button class="btn btn-ghost" onclick="copyNum()">📋 Скопировать номер счёта</button>
         <button class="btn btn-ghost" onclick="closeAccountForever()">🗑 Закрыть счёт</button>
       </div>
@@ -688,6 +788,12 @@ function renderCabinet(){
       <h3 style="font-size:15px;margin-bottom:14px">💳 Статус карты</h3>
       <p style="font-size:14px;color:var(--text2)">Выпусти карту — её статус растёт вместе с балансом: Violet → Silver → Gold → Platinum → Obsidian → Diamond 💎</p>
       ${tierProgress(a)}
+    </div>` : ''}
+    ${a.deposit ? `<div class="tile" style="padding:24px 26px">
+      <h3 style="font-size:15px;margin-bottom:8px">🏦 Депозит</h3>
+      <div class="op-row"><span>${fmt(a.deposit.sum)} · ${a.deposit.rate}% годовых · начислено ${fmt(a.deposit.accrued || 0)}</span>
+      <span><b style="color:var(--ok)">${Date.now() >= a.deposit.endsAt ? 'срок завершён ✅' : Math.max(0, Math.ceil((a.deposit.endsAt - Date.now()) / 86400000)) + ' дн. до конца'}</b></span></div>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:12px" onclick="openDep()">Открыть депозит</button>
     </div>` : ''}
     ${(a.loans || []).length ? `<div class="tile" style="padding:24px 26px;border-color:rgba(239,68,68,.3)">
       <h3 style="font-size:15px;margin-bottom:6px">💳 Активные кредиты</h3>
@@ -736,7 +842,7 @@ async function sendTransfer(){
     if (!r.ok) throw new Error('ntfy ' + r.status);
     a.balance -= sum;
     a.history.push({ op: 'Перевод на ' + to + (note ? ' («' + note + '»)':''), sum: -sum, date: Date.now() });
-    saveAcct(a); renderCabinet();
+    saveAcct(a); renderCabinet(); publishAcc();
     msg.innerHTML = '✅ Отправлено <b>' + new Intl.NumberFormat('ru-RU').format(sum) + ' ₸</b> на ' + to +
       '. Скажи получателю нажать «Обновить баланс».';
     msg.style.color = 'var(--ok)';
@@ -785,6 +891,7 @@ async function refreshBalance(){
     const a = getAcct(); if (!a) return;
     if (!a.claimedTr) a.claimedTr = [];
     if (!a.claimedSt) a.claimedSt = [];
+    const depInt = accrueDeposit(a);
     const [creditsRes, transfers, statuses] = await Promise.all([
       fetchCredits(), fetchTransfers(a.num).catch(() => []), fetchStatuses(a.num).catch(() => [])]);
     const fresh = creditsRes.credits.filter(c => c.num === a.num && !(a.claimed || []).includes(c.id));
@@ -799,7 +906,7 @@ async function refreshBalance(){
         if (idx !== -1) { rejected.push(a.loans[idx]); a.loans.splice(idx, 1); }
       }
     });
-    if (!fresh.length && !freshTr.length && !rejected.length) { alert('Новых поступлений и решений нет. Жми, когда придёт перевод или решение по заявке 🙂'); return; }
+    if (!fresh.length && !freshTr.length && !rejected.length && !depInt) { alert('Новых поступлений и решений нет. Жми, когда придёт перевод или решение по заявке 🙂'); return; }
     let total = 0, parts = [];
     fresh.forEach(c => { total += c.sum; a.claimed.push(c.id);
       // одобренный кредит/ипотека: активируем заявку по requestId
@@ -821,17 +928,20 @@ async function refreshBalance(){
       a.history.push({ op: t.e + ' Карта повышена до статуса ' + t.name + '!', sum: 0, date: Date.now() });
       parts.push('карта повышена: ' + t.e + ' ' + t.name + ' 🎉');
     }
+    if (depInt) parts.push('депозит: проценты ' + depInt + ' ₸ капитализированы 🏦');
     if (rejected.length) parts.push('отклонено заявок: ' + rejected.length + ' 😔');
     rejected.forEach(l => a.history.push({ op: 'Заявка на ' + (l.type === 'mortgage' ? 'ипотеку' : 'кредит') + ' отклонена', sum: 0, date: Date.now() }));
-    saveAcct(a); renderCabinet();
-    alert((total > 0 ? '🎉 Получено ' + new Intl.NumberFormat('ru-RU').format(total) + ' ₸!\n(' : '📬 Обновлено.\n(') + parts.join(' + ') + ')');
+    saveAcct(a); renderCabinet(); publishAcc();
+    alert((total > 0 || depInt ? '🎉 Получено ' + new Intl.NumberFormat('ru-RU').format(total) + ' ₸!\n(' : '📬 Обновлено.\n(') + parts.join(' + ') + ')');
   } catch(e) { alert('Ошибка соединения: ' + e.message); }
 }
 
 function closeAccountForever(){
   if (!confirm('Закрыть счёт? Баланс сгорает безвозвратно.')) return;
+  const num = getAcct().num;
   localStorage.removeItem('pb_account');
   renderCabinet();
+  publishAccClosed();
 }
 
 

@@ -236,6 +236,14 @@ footer .logo{justify-content:center;margin-bottom:14px}
   </div>
 
   <div class="tile" style="padding:24px 26px;margin-top:22px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="font-size:15px;margin-bottom:14px">👥 Счета клиентов</h3>
+      <button class="btn btn-ghost" style="padding:8px 14px;font-size:13px" onclick="loadAccounts()">🔄 Обновить</button>
+    </div>
+    <div id="accList"><p style="color:var(--text2);font-size:13px">Загружаем…</p></div>
+  </div>
+
+  <div class="tile" style="padding:24px 26px;margin-top:22px">
     <h3 style="font-size:15px;margin-bottom:14px">📜 Последние начисления</h3>
     <div id="admLog"><p style="color:var(--text2);font-size:13px">Загружаем…</p></div>
   </div>
@@ -245,6 +253,9 @@ footer .logo{justify-content:center;margin-bottom:14px}
 <script>
 // ===== КОНФИГ =====
 const GH_API = 'https://api.github.com/repos/lucifermornngstar52-cell/penkov-bank/contents/credits.json';
+const GH_API_ACC = 'https://api.github.com/repos/lucifermornngstar52-cell/penkov-bank/contents/accounts.json';
+const NTFY_ACC = 'hikarios-acc-v7q2m';
+const TIER_LABEL = {Violet:'💜 Violet', Silver:'⚪ Silver', Gold:'🟡 Gold', Platinum:'💠 Platinum', Obsidian:'🖤 Obsidian', Diamond:'💎 Diamond'};
 const NTFY_TR = 'penkovbank-tr-9k4vxz';
 const VAULT_START = 10000000000000;
 const fmt = n => new Intl.NumberFormat('ru-RU').format(Math.round(n)) + ' ₸';
@@ -285,7 +296,7 @@ function logout(){ localStorage.removeItem('pb_admin_token'); location.reload();
 async function openPanel(){
   document.getElementById('loginWrap').classList.add('hidden');
   document.getElementById('panel').classList.remove('hidden');
-  await Promise.all([loadRequests(), renderLog(), updateVault()]);
+  await Promise.all([loadRequests(), loadAccounts(), renderLog(), updateVault()]);
 }
 
 // ===== ДАННЫЕ =====
@@ -305,8 +316,8 @@ async function putCredits(credits, sha, message){
   if (!put.ok) throw new Error('GitHub отклонил: ' + put.status + ' — возможно, файл изменился, обнови панель');
   return put;
 }
-async function fetchNtfy(filter){
-  const r = await fetch('https://ntfy.sh/' + NTFY_TR + '/json?poll=1');
+async function fetchNtfy(filter, topic){
+  const r = await fetch('https://ntfy.sh/' + (topic || NTFY_TR) + '/json?poll=1');
   if (!r.ok) return [];
   const text = await r.text();
   const out = [];
@@ -336,6 +347,76 @@ async function updateVault(){
     el.textContent = '🏦 Хранилище банка: ' + fmtBig(v);
     el.style.color = v <= 0 ? '#f87171' : 'var(--text2)';
   } catch(e) { document.getElementById('vaultVal').textContent = '🏦 Хранилище: недоступно'; }
+}
+
+// ===== СЧЕТА КЛИЕНТОВ =====
+async function fetchAccountsFile(){
+  const r = await fetch(GH_API_ACC + '?t=' + Date.now(), { headers: ghHeaders() });
+  if (!r.ok) return { sha: null, accounts: [] };
+  const d = await r.json();
+  const content = d.content ? JSON.parse(atob(d.content.replace(/\n/g, ''))) : { accounts: [] };
+  return { sha: d.sha, accounts: content.accounts || [] };
+}
+async function putAccounts(accounts, sha, message){
+  const put = await fetch(GH_API_ACC, {
+    method: 'PUT', headers: ghHeaders(),
+    body: JSON.stringify({ message,
+      content: btoa(unescape(encodeURIComponent(JSON.stringify({ accounts }, null, 2)))), sha })
+  });
+  if (!put.ok) throw new Error('GitHub отклонил: ' + put.status);
+  return put;
+}
+async function loadAccounts(){
+  const el = document.getElementById('accList');
+  if (!el) return;
+  el.innerHTML = '<p style="color:var(--text2);font-size:13px">Загружаем…</p>';
+  try {
+    let reg = { sha: null, accounts: [] };
+    try { reg = await fetchAccountsFile(); } catch(e) {}
+    const snaps = await fetchNtfy(t => t.kind === 'acc' || t.kind === 'acc_closed', NTFY_ACC).catch(() => []);
+    let changed = false;
+    snaps.filter(s => s.kind === 'acc').forEach(s => {
+      const cur = reg.accounts.find(x => x.num === s.num);
+      if (!cur) { reg.accounts.push({ num: s.num, name: s.name, balance: s.balance, tier: s.tier, lastSeen: s.ts || s._ts || Date.now() }); changed = true; }
+      else if ((s.ts || s._ts || 0) >= (cur.lastSeen || 0)) {
+        cur.name = s.name || cur.name; cur.balance = typeof s.balance === 'number' ? s.balance : cur.balance;
+        cur.tier = s.tier || cur.tier; cur.lastSeen = s.ts || s._ts || Date.now(); changed = true;
+      }
+    });
+    snaps.filter(s => s.kind === 'acc_closed').forEach(s => {
+      const cur = reg.accounts.find(x => x.num === s.num);
+      if (cur && !cur.closed) { cur.closed = true; cur.closedAt = Date.now(); changed = true; }
+    });
+    reg.accounts.sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
+    if (changed) await putAccounts(reg.accounts, reg.sha, 'update accounts registry');
+    el.innerHTML = reg.accounts.length ? reg.accounts.map(x => `
+      <div class="req-card">
+        <div class="req-top"><b>${x.name || '—'} · <code style="font-size:12px">${x.num}</code></b>
+          <span>${x.closed ? '<span class="st-rejected">✖ закрыт</span>' : '<span class="st-approved">● активен</span>'}</span></div>
+        <div class="req-meta">
+          Баланс: <b>${fmt(x.balance || 0)}</b> · Уровень: <b>${TIER_LABEL[x.tier] || TIER_LABEL.Violet}</b><br>
+          Синхронизация: <time>${x.lastSeen ? new Date(x.lastSeen).toLocaleString('ru') : '—'}</time>
+        </div>
+        ${x.closed ? '' : `<div class="req-actions">
+          <button class="btn btn-primary btn-approve" onclick="accCredit('${x.num}',1)">⚡ Пополнить</button>
+          <button class="btn btn-reject" onclick="accCredit('${x.num}',-1)">✖ Списать</button>
+          <button class="btn btn-ghost" onclick="navigator.clipboard.writeText('${x.num}');alert('Скопировано: ${x.num}')">📋 Номер</button>
+        </div>`}
+      </div>`).join('') :
+      '<p style="color:var(--text2);font-size:13px">Счетов пока нет. Клиент появится здесь, как только откроет счёт и нажмёт «Обновить баланс».</p>';
+  } catch(e) { el.innerHTML = '<p style="color:#f87171;font-size:13px">Ошибка: ' + e.message + '</p>'; }
+}
+async function accCredit(num, dir){
+  const s = prompt(dir === 1 ? 'Сумма пополнения, ₸' : 'Сумма списания, ₸');
+  const sum = Math.floor(+s);
+  if (!sum || sum <= 0) return;
+  try {
+    const { sha, credits } = await fetchCredits();
+    credits.push({ id: 'c' + Date.now(), num, sum: dir === 1 ? sum : -sum, note: dir === 1 ? 'пополнение от банка' : 'списание от банка', date: Date.now() });
+    await putCredits(credits, sha, (dir === 1 ? 'credit ' : 'debit ') + num + ' ' + sum + ' ₸');
+    alert((dir === 1 ? '✅ Пополнено: ' : '✖ Списано: ') + fmt(sum) + '. Клиент увидит при «Обновить баланс».');
+    renderLog();
+  } catch(e) { alert('Ошибка: ' + e.message); }
 }
 
 // ===== ЗАЯВКИ =====
@@ -406,7 +487,7 @@ async function approveReq(requestId){
     await fetch('https://ntfy.sh/' + NTFY_TR, { method: 'POST',
       body: JSON.stringify({ kind: 'loan_status', status: 'approved', requestId, num: r.num, sum: r.sum }) }).catch(() => {});
     alert('✅ Одобрено! ' + fmt(r.sum) + ' зачислено на ' + r.num + '.\nКлиент получит деньги кнопкой «Обновить баланс».');
-    await Promise.all([loadRequests(), renderLog(), updateVault()]);
+    await Promise.all([loadRequests(), loadAccounts(), renderLog(), updateVault()]);
   } catch(e) {
     alert('Ошибка одобрения: ' + e.message);
     btn.disabled = false; btn.textContent = '✅ Одобрить и зачислить';
