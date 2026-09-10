@@ -1,11 +1,25 @@
 {
   "accounts": [
     {
+      "num": "PB-730326180550",
+      "name": "Никита",
+      "balance": 0,
+      "tier": "Violet",
+      "lastSeen": 1789046271596
+    },
+    {
+      "num": "PB-718964765777",
+      "name": "Русл",
+      "balance": 1000,
+      "tier": "Violet",
+      "lastSeen": 1789045499126
+    },
+    {
       "num": "PB-636673910918",
       "name": "Руслан",
-      "balance": 1000200,
+      "balance": 1099400,
       "tier": "Platinum",
-      "lastSeen": 1789043567147
+      "lastSeen": 1789045487063
     },
     {
       "num": "PB-535279986311",
@@ -41,13 +55,6 @@
       "balance": 100000,
       "tier": "Gold",
       "lastSeen": 1789042571246
-    },
-    {
-      "num": "PB-730326180550",
-      "name": "Никита",
-      "balance": 100000,
-      "tier": "Gold",
-      "lastSeen": 1789042273909
     },
     {
       "num": "PB-500010618181",
