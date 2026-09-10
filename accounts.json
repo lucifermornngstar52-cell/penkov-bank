@@ -59,9 +59,9 @@
     {
       "num": "PB-792379354846",
       "name": "Человек",
-      "balance": 9.811111033098042e+22,
-      "tier": "Diamond",
-      "lastSeen": 1789029123233
+      "balance": 100000,
+      "tier": "Gold",
+      "lastSeen": 1789042951609
     }
   ]
 }
