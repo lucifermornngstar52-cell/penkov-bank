@@ -1,6 +1,13 @@
 {
   "accounts": [
     {
+      "num": "PB-730326180550",
+      "name": "Никита",
+      "balance": 412384,
+      "tier": "Gold",
+      "lastSeen": 1789031106236
+    },
+    {
       "num": "PB-788885156159",
       "name": "Тест Е2Е",
       "balance": 0,
