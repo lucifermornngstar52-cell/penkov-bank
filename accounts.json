@@ -20,6 +20,13 @@
       "balance": 500000001000,
       "tier": "Diamond",
       "lastSeen": 1789030183671
+    },
+    {
+      "num": "PB-792379354846",
+      "name": "Человек",
+      "balance": 1000000000000,
+      "tier": "Diamond",
+      "lastSeen": 1789028084040
     }
   ]
 }
