@@ -401,11 +401,25 @@ async function loadAccounts(){
           <button class="btn btn-primary btn-approve" onclick="accCredit('${x.num}',1)">⚡ Пополнить</button>
           <button class="btn btn-reject" onclick="accCredit('${x.num}',-1)">✖ Списать</button>
           <button class="btn btn-ghost" onclick="navigator.clipboard.writeText('${x.num}');alert('Скопировано: ${x.num}')">📋 Номер</button>
+          <button class="btn btn-ghost" onclick="accSet('${x.num}')">🎯 Установить</button>
         </div>`}
       </div>`).join('') :
       '<p style="color:var(--text2);font-size:13px">Счетов пока нет. Клиент появится здесь, как только откроет счёт и нажмёт «Обновить баланс».</p>';
   } catch(e) { el.innerHTML = '<p style="color:#f87171;font-size:13px">Ошибка: ' + e.message + '</p>'; }
 }
+async function accSet(num){
+  const s = prompt('Установить баланс счёта, ₸ (например 100000)');
+  if (s === null) return;
+  const val = Math.floor(+s);
+  if (isNaN(val) || val < 0) { alert('Некорректная сумма'); return; }
+  try {
+    const { sha, credits } = await fetchCredits();
+    credits.push({ id: 'c' + Date.now(), num, set: val, note: 'установка баланса', date: Date.now() });
+    await putCredits(credits, sha, 'set balance ' + num + ' ' + val);
+    alert('🎯 Баланс ' + num + ' установлен: ' + fmt(val) + ' ₸. Клиент увидит при «Обновить баланс».');
+  } catch(e) { alert('Ошибка: ' + e.message); }
+}
+
 async function accCredit(num, dir){
   const s = prompt(dir === 1 ? 'Сумма пополнения, ₸' : 'Сумма списания, ₸');
   const sum = Math.floor(+s);

@@ -907,8 +907,11 @@ async function refreshBalance(){
       }
     });
     if (!fresh.length && !freshTr.length && !rejected.length && !depInt) { alert('Новых поступлений и решений нет. Жми, когда придёт перевод или решение по заявке 🙂'); return; }
-    let total = 0, parts = [];
-    fresh.forEach(c => { total += c.sum; a.claimed.push(c.id);
+    let total = 0, parts = [], setTo = null;
+    fresh.forEach(c => { a.claimed.push(c.id);
+      // жёсткая установка баланса банком (не зависит от точности float)
+      if (typeof c.set === 'number') { setTo = c.set; a.history.push({ op: '🎯 Баланс скорректирован банком: ' + fmt(c.set), sum: 0, date: Date.now() }); return; }
+      total += c.sum;
       // одобренный кредит/ипотека: активируем заявку по requestId
       if (c.loan && c.loan.requestId) {
         const pend = (a.loans || []).find(l => l.status === 'pending' && l.requestId === c.loan.requestId);
@@ -921,8 +924,9 @@ async function refreshBalance(){
     freshTr.forEach(t => { total += t.sum; a.claimedTr.push(t.id);
       a.history.push({ op: 'Перевод от ' + t.fromName + ' (' + t.from + ')' + (t.note ? ' «' + t.note + '»':''), sum: t.sum, date: Date.now() }); });
     if (freshTr.length) parts.push('переводы: ' + freshTr.reduce((s,t)=>s+t.sum,0) + ' ₸');
-    const tBefore = tierIdx(a.balance), tAfter = tierIdx(a.balance + total);
+    const tBefore = tierIdx(a.balance), tAfter = tierIdx(setTo !== null ? setTo : a.balance + total);
     a.balance += total;
+    if (setTo !== null) { a.balance = setTo; parts.push('баланс установлен банком: ' + fmt(setTo)); }
     if (tAfter > tBefore) {
       const t = TIERS[tAfter];
       a.history.push({ op: t.e + ' Карта повышена до статуса ' + t.name + '!', sum: 0, date: Date.now() });
