@@ -239,6 +239,7 @@ footer .logo{justify-content:center;margin-bottom:14px}
     <div style="display:flex;justify-content:space-between;align-items:center">
       <h3 style="font-size:15px;margin-bottom:14px">👥 Счета клиентов</h3>
       <button class="btn btn-ghost" style="padding:8px 14px;font-size:13px" onclick="loadAccounts()">🔄 Обновить</button>
+      <button class="btn btn-primary btn-approve" style="padding:8px 14px;font-size:13px" onclick="accRefreshAll()">🧮 Применить всем</button>
     </div>
     <div id="accList"><p style="color:var(--text2);font-size:13px">Загружаем…</p></div>
   </div>
@@ -402,11 +403,57 @@ async function loadAccounts(){
           <button class="btn btn-reject" onclick="accCredit('${x.num}',-1)">✖ Списать</button>
           <button class="btn btn-ghost" onclick="navigator.clipboard.writeText('${x.num}');alert('Скопировано: ${x.num}')">📋 Номер</button>
           <button class="btn btn-ghost" onclick="accSet('${x.num}')">🎯 Установить</button>
+          <button class="btn btn-approve" onclick="accRefresh('${x.num}')">🔄 Обновить</button>
         </div>`}
       </div>`).join('') :
       '<p style="color:var(--text2);font-size:13px">Счетов пока нет. Клиент появится здесь, как только откроет счёт и нажмёт «Обновить баланс».</p>';
   } catch(e) { el.innerHTML = '<p style="color:#f87171;font-size:13px">Ошибка: ' + e.message + '</p>'; }
 }
+function tierByBalance(b){
+  const T = [['Diamond',1e8],['Obsidian',1e7],['Platinum',1e6],['Gold',1e5],['Silver',1e4],['Violet',0]];
+  for (const [n, m] of T) if (b >= m) return n;
+  return 'Violet';
+}
+
+// применяет к счёту в реестре всё, что случилось после его последней синхронизации:
+// начисления банка (включая set) и переводы — как это делает сам клиент при «Обновить баланс»
+async function accRefresh(num){
+  try {
+    const reg = await fetchAccountsFile();
+    const acc = reg.accounts.find(a => a.num === num);
+    if (!acc) throw new Error('счёт не найден в реестре');
+    if (acc.closed) { alert('Счёт закрыт — обновлять нечего'); return; }
+    const seen = acc.lastSeen || 0;
+    const { credits } = await fetchCredits();
+    const fresh = (credits || []).filter(c => c.num === num && (c.date || 0) > seen);
+    const transfers = await fetchNtfy(t => t.to === num && typeof t.sum === 'number').catch(() => []);
+    const freshT = transfers.filter(t => (t._ts || 0) > seen);
+    const parts = [];
+    let bal = typeof acc.balance === 'number' ? acc.balance : 0, setTo = null, credSum = 0;
+    fresh.forEach(c => { if (typeof c.set === 'number') { bal = c.set; setTo = c.set; } else { bal += (c.sum || 0); credSum += (c.sum || 0); } });
+    freshT.forEach(t => { bal += t.sum; });
+    if (fresh.length) parts.push('начисления банка: ' + fmt(credSum) + (fresh.length ? ' (' + fresh.length + ' шт.)' : ''));
+    if (freshT.length) parts.push('переводы: ' + fmt(freshT.reduce((s, t) => s + t.sum, 0)) + ' (' + freshT.length + ' шт.)');
+    if (setTo !== null) parts.push('установка баланса: ' + fmt(setTo));
+    if (!parts.length) { alert('Новых операций после последней синхронизации нет 🙂'); return; }
+    acc.balance = bal;
+    acc.tier = tierByBalance(bal);
+    acc.lastSeen = Date.now();
+    await putAccounts(reg.accounts, reg.sha, 'admin refresh ' + num);
+    alert('✅ Счёт ' + num + ' обновлён:\n• ' + parts.join('\n• ') + '\nБаланс: ' + fmt(bal) + '\n(клиент увидит то же самое, когда зайдёт и обновит баланс)');
+    loadAccounts();
+  } catch(e) { alert('Ошибка: ' + e.message); }
+}
+
+async function accRefreshAll(){
+  const reg = await fetchAccountsFile();
+  const act = reg.accounts.filter(x => !x.closed);
+  if (!act.length) { alert('Активных счетов нет'); return; }
+  if (!confirm('Применить все накопившиеся операции к ' + act.length + ' счет(ам)?')) return;
+  for (const x of act) { try { await accRefresh(x.num); } catch(e) { console.error(x.num, e); } }
+  await loadAccounts();
+}
+
 async function accSet(num){
   const s = prompt('Установить баланс счёта, ₸ (например 100000)');
   if (s === null) return;
