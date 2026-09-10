@@ -38,6 +38,21 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
 .hero-band p{color:var(--text2);margin-top:10px;font-size:14px}
 
 .grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+/* lobby */
+.lobby-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:22px 0}
+.gcard{position:relative;border-radius:20px;padding:26px 22px 22px;cursor:pointer;overflow:hidden;
+  border:1px solid var(--line);background:var(--card);transition:transform .18s,box-shadow .18s,border-color .18s}
+.gcard:hover{transform:translateY(-7px);box-shadow:0 16px 44px rgba(0,0,0,.5);border-color:var(--gold)}
+.gcard::before{content:'';position:absolute;inset:0;opacity:.14;pointer-events:none}
+.gcard .gicon{font-size:44px;line-height:1;margin-bottom:14px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))}
+.gcard h4{font-size:17px;margin-bottom:6px;color:#fff}
+.gcard p{font-size:12px;color:var(--text2);line-height:1.55}
+.gcard .gplay{display:inline-block;margin-top:14px;font-size:12px;font-weight:700;color:var(--gold)}
+.gc-dice::before{background:radial-gradient(circle at 20% 0%,#34d399,transparent 65%)}
+.gc-rou::before{background:radial-gradient(circle at 20% 0%,#f59e0b,transparent 65%)}
+.gc-slot::before{background:radial-gradient(circle at 20% 0%,#7c3aed,transparent 65%)}
+.gc-pok::before{background:radial-gradient(circle at 20% 0%,#ef4444,transparent 65%)}
+.gc-bj::before{background:radial-gradient(circle at 20% 0%,#38bdf8,transparent 65%)}
 .tile{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px}
 .tile h3{font-size:17px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
 .tile h3 .bal-delta{font-size:13px;font-weight:700}
@@ -163,8 +178,9 @@ footer a:hover{color:var(--p2)}
   </header>
 
   <div class="hero-band">
-    <h1>Казино HikariOS 🎰</h1>
+    <h1 id="casinoTitle">Казино HikariOS 🎰</h1>
     <p>Играй на тенге со своего счёта. Проигрыш — почти безболезненный.</p>
+    <button class="btn btn-ghost" id="backBtn" style="display:none;margin-top:14px" onclick="backToLobby()">← В зал</button>
   </div>
 
   <div id="needAcct" class="no-acct">
@@ -173,9 +189,34 @@ footer a:hover{color:var(--p2)}
     <a class="btn btn-gold" href="index.html#account">🚀 Открыть счёт</a>
   </div>
 
+  <div id="lobby" style="display:none">
+    <div class="lobby-grid">
+      <div class="gcard gc-dice" onclick="openGame('dice')">
+        <div class="gicon">🎲</div><h4>Кости</h4>
+        <p>Ставь на больше или меньше 7. Ровно семь — x5.</p><span class="gplay">Играть →</span>
+      </div>
+      <div class="gcard gc-rou" onclick="openGame('roulette')">
+        <div class="gicon">🎡</div><h4>Рулетка</h4>
+        <p>37 секторов. Цвет, чёт, дюжины и зеро — до x36.</p><span class="gplay">Играть →</span>
+      </div>
+      <div class="gcard gc-slot" onclick="openGame('slots')">
+        <div class="gicon">🎰</div><h4>Слоты</h4>
+        <p>Три барабана. Джекпот до x50 за три алмаза.</p><span class="gplay">Играть →</span>
+      </div>
+      <div class="gcard gc-pok" onclick="openGame('poker')">
+        <div class="gicon">🃏</div><h4>Покер</h4>
+        <p>Пятикарточный дро против дилера. Меняй до трёх карт.</p><span class="gplay">Играть →</span>
+      </div>
+      <div class="gcard gc-bj" onclick="openGame('blackjack')">
+        <div class="gicon">🂡</div><h4>Блэкджек</h4>
+        <p>Собери 21. Блэкджек с раздачи платит 3:2.</p><span class="gplay">Играть →</span>
+      </div>
+    </div>
+  </div>
+
   <div id="games" class="grid">
     <!-- DICE -->
-    <div class="tile">
+    <div class="tile" data-game="dice">
       <h3>🎲 Кубики <span style="font-size:12px;color:var(--text2)">больше/меньше 7</span></h3>
       <div class="bet-row"><input type="number" id="diceBet" value="100" min="1"></div>
       <div class="quick">
@@ -194,7 +235,7 @@ footer a:hover{color:var(--p2)}
     </div>
 
     <!-- ROULETTE -->
-    <div class="tile">
+    <div class="tile" data-game="roulette">
       <h3>🎡 Рулетка <span style="font-size:12px;color:var(--text2)">цвет · чёт · дюжины · зеро — x2 / x3 / x36</span></h3>
       <div class="bet-row"><input type="number" id="rouBet" value="100" min="1"></div>
       <div class="quick">
@@ -224,7 +265,7 @@ footer a:hover{color:var(--p2)}
     </div>
 
     <!-- SLOTS -->
-    <div class="tile">
+    <div class="tile" data-game="slots">
       <h3>🎰 Слоты <span style="font-size:12px;color:var(--text2)">три в ряд</span></h3>
       <div class="bet-row"><input type="number" id="slotBet" value="100" min="1"></div>
       <div class="quick">
@@ -245,7 +286,7 @@ footer a:hover{color:var(--p2)}
       <div class="result" id="slotRes"></div>
 
     <!-- POKER -->
-    <div class="tile" style="grid-column:1/-1">
+    <div class="tile" data-game="poker" style="grid-column:1/-1">
       <h3>🃏 Покер <span style="font-size:12px;color:var(--text2)">пятикарточный дро · против дилера</span></h3>
       <div class="felt">
         <div class="poker-label" id="pokDealerLabel">Дилер</div>
@@ -267,7 +308,7 @@ footer a:hover{color:var(--p2)}
     </div>
 
     <!-- BLACKJACK -->
-    <div class="tile" style="grid-column:1/-1">
+    <div class="tile" data-game="blackjack" style="grid-column:1/-1">
       <h3>🂡 Блэкджек <span style="font-size:12px;color:var(--text2)">дилер добирает до 17 · блэкджек платит 3:2</span></h3>
       <div class="felt">
         <div class="poker-label" id="bjDealerLabel">Дилер</div>
@@ -313,14 +354,38 @@ function casEnsure(){
   return c;
 }
 
+const GAME_META = {
+  dice:{ name:'Кости', icon:'🎲' }, roulette:{ name:'Рулетка', icon:'🎡' },
+  slots:{ name:'Слоты', icon:'🎰' }, poker:{ name:'Покер', icon:'🃏' },
+  blackjack:{ name:'Блэкджек', icon:'🂡' }
+};
 function refreshBal(){
   const a = getAcct();
   if (!a) return; // без счёта банка — экран needAcct
   const c = casEnsure();
   document.getElementById('needAcct').style.display = 'none';
-  document.getElementById('games').style.display = 'grid';
   document.getElementById('balVal').textContent = fmt(c.balance);
   document.getElementById('balAcc').textContent = a.num;
+  // восстановление последнего экрана
+  const v = localStorage.getItem('pb_casino_view') || 'lobby';
+  if (v === 'lobby' || !GAME_META[v]) backToLobby(); else openGame(v);
+}
+function openGame(g){
+  if (!GAME_META[g]) return;
+  document.querySelectorAll('#games .tile').forEach(t => t.style.display = (t.dataset.game === g) ? '' : 'none');
+  document.getElementById('games').style.display = 'grid';
+  document.getElementById('lobby').style.display = 'none';
+  document.getElementById('backBtn').style.display = 'inline-flex';
+  document.getElementById('casinoTitle').textContent = GAME_META[g].icon + ' ' + GAME_META[g].name;
+  localStorage.setItem('pb_casino_view', g);
+}
+function backToLobby(){
+  document.querySelectorAll('#games .tile').forEach(t => t.style.display = '');
+  document.getElementById('games').style.display = 'none';
+  document.getElementById('lobby').style.display = 'block';
+  document.getElementById('backBtn').style.display = 'none';
+  document.getElementById('casinoTitle').textContent = 'Казино HikariOS 🎰';
+  localStorage.setItem('pb_casino_view', 'lobby');
 }
 
 function bankToCasino(){
