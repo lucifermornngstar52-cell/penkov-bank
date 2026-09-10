@@ -66,13 +66,26 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
 .choice.sel b{color:var(--p2)}
 
 /* roulette */
-.wheel{width:200px;height:200px;border-radius:50%;margin:18px auto;position:relative;
-  background:conic-gradient(var(--red) 0 45deg,var(--bg2) 45deg 90deg,var(--red) 90deg 135deg,var(--bg2) 135deg 180deg,
-  var(--red) 180deg 225deg,var(--bg2) 225deg 270deg,var(--red) 270deg 315deg,var(--bg2) 315deg 360deg);
-  border:6px solid var(--gold);box-shadow:0 0 40px rgba(245,158,11,.35);transition:transform 3.4s cubic-bezier(.2,.8,.2,1)}
-.wheel::after{content:'';position:absolute;inset:40%;border-radius:50%;background:var(--gold);box-shadow:inset 0 0 12px rgba(0,0,0,.5)}
-.wheel-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;font-size:44px;font-weight:800;
-  text-shadow:0 2px 20px rgba(0,0,0,.6);pointer-events:none}
+.rou-wrap{position:relative;width:250px;height:250px;margin:20px auto}
+.wheel{position:absolute;inset:0;border-radius:50%;border:7px solid var(--gold);
+  box-shadow:0 0 44px rgba(245,158,11,.4),inset 0 0 26px rgba(0,0,0,.55);overflow:hidden;
+  transition:transform 4.2s cubic-bezier(.15,.75,.18,1)}
+.wheel-disc{position:absolute;inset:0}
+.wn{position:absolute;top:50%;left:50%;width:20px;height:20px;margin:-10px 0 0 -10px;
+  display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;color:#fff;
+  text-shadow:0 1px 3px rgba(0,0,0,.9);transform-origin:0 0}
+.wheel-hub{position:absolute;top:50%;left:50%;width:74px;height:74px;transform:translate(-50%,-50%);
+  border-radius:50%;background:radial-gradient(circle at 32% 28%,#fde68a,var(--gold) 58%,#b45309);
+  box-shadow:0 4px 22px rgba(0,0,0,.55),inset 0 0 14px rgba(0,0,0,.35);
+  display:flex;align-items:center;justify-content:center;z-index:3}
+.wheel-num{font-size:30px;font-weight:800;color:#1a1000;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+.rou-pointer{position:absolute;top:-3px;left:50%;transform:translateX(-50%);z-index:4;
+  width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;
+  border-top:18px solid var(--gold);filter:drop-shadow(0 2px 6px rgba(0,0,0,.6))}
+.rou-hist{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin:4px 0 6px}
+.rou-hist b{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:12.5px;font-weight:800;color:#fff;border:2px solid rgba(255,255,255,.22);box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.rou-hist b.hred{background:var(--red)} .rou-hist b.hblack{background:#1f1f2e} .rou-hist b.hzero{background:var(--ok)}
 .rc{background:var(--red);border-color:var(--red)}
 .bc{background:#26263a;border-color:#6b7280}
 .zc{background:rgba(52,211,153,.15);border-color:var(--ok)}
@@ -153,7 +166,7 @@ footer a:hover{color:var(--p2)}
 
     <!-- ROULETTE -->
     <div class="tile">
-      <h3>🎡 Рулетка <span style="font-size:12px;color:var(--text2)">красное / чёрное / зеро</span></h3>
+      <h3>🎡 Рулетка <span style="font-size:12px;color:var(--text2)">цвет · чёт · дюжины · зеро — x2 / x3 / x36</span></h3>
       <div class="bet-row"><input type="number" id="rouBet" value="100" min="1"></div>
       <div class="quick">
         <button onclick="setBet('rouBet',100)">+100</button><button onclick="setBet('rouBet',500)">+500</button>
@@ -162,10 +175,22 @@ footer a:hover{color:var(--p2)}
       <div class="choice-row">
         <div class="choice rc" data-g="rou" data-v="red" onclick="pickChoice(this)">Красное<b>x2</b></div>
         <div class="choice bc" data-g="rou" data-v="black" onclick="pickChoice(this)">Чёрное<b>x2</b></div>
-        <div class="choice zc" data-g="rou" data-v="zero" onclick="pickChoice(this)">Зеро<b>x14</b></div>
+        <div class="choice" data-g="rou" data-v="even" onclick="pickChoice(this)">Чёт<b>x2</b></div>
+        <div class="choice" data-g="rou" data-v="odd" onclick="pickChoice(this)">Нечет<b>x2</b></div>
+        <div class="choice" data-g="rou" data-v="low" onclick="pickChoice(this)">1–18<b>x2</b></div>
+        <div class="choice" data-g="rou" data-v="high" onclick="pickChoice(this)">19–36<b>x2</b></div>
+        <div class="choice" data-g="rou" data-v="dz1" onclick="pickChoice(this)">1–12<b>x3</b></div>
+        <div class="choice" data-g="rou" data-v="dz2" onclick="pickChoice(this)">13–24<b>x3</b></div>
+        <div class="choice" data-g="rou" data-v="dz3" onclick="pickChoice(this)">25–36<b>x3</b></div>
+        <div class="choice zc" data-g="rou" data-v="zero" onclick="pickChoice(this)">Зеро<b>x36</b></div>
       </div>
-      <div class="wheel" id="wheel"><div class="wheel-num" id="wheelNum">?</div></div>
-      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="spinRoulette()">Крутить</button>
+      <div class="rou-wrap">
+        <div class="rou-pointer"></div>
+        <div class="wheel" id="wheel"><div class="wheel-disc" id="wheelDisc"></div></div>
+        <div class="wheel-hub"><span class="wheel-num" id="wheelNum">?</span></div>
+      </div>
+      <div class="rou-hist" id="rouHist"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" id="rouBtn" onclick="spinRoulette()">Крутить</button>
       <div class="result" id="rouRes"></div>
     </div>
 
@@ -551,35 +576,94 @@ function rollDice(){
   }, 1300);
 }
 
-// ===== ROULETTE =====
-let wheelDeg = 0;
+// ===== ROULETTE (европейская, 37 секторов) =====
+const WHEEL_ORDER = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+const RED_NUMS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const SECT = 360 / 37;
+const ROU_MULT = { red:2, black:2, even:2, odd:2, low:2, high:2, dz1:3, dz2:3, dz3:3, zero:36 };
+const ROU_NAME  = { red:'Красное', black:'Чёрное', even:'Чёт', odd:'Нечет', low:'1–18', high:'19–36',
+                    dz1:'1–12', dz2:'13–24', dz3:'25–36', zero:'Зеро' };
+const numColor = n => n === 0 ? 'var(--ok)' : RED_NUMS.has(n) ? 'var(--red)' : '#1f1f2e';
+const numColorName = n => n === 0 ? 'зеро' : RED_NUMS.has(n) ? 'красное' : 'чёрное';
+
+function buildWheel(){
+  const disc = document.getElementById('wheelDisc');
+  let stops = [];
+  WHEEL_ORDER.forEach((n, i) => {
+    const col = n === 0 ? '#059669' : RED_NUMS.has(n) ? '#dc2626' : '#1f1f2e';
+    stops.push(col + ' ' + (i * SECT).toFixed(3) + 'deg ' + ((i + 1) * SECT).toFixed(3) + 'deg');
+  });
+  disc.style.background = 'conic-gradient(' + stops.join(',') + ')';
+  let labels = '';
+  WHEEL_ORDER.forEach((n, i) => {
+    const a = i * SECT + SECT / 2;
+    labels += '<span class="wn" style="transform:rotate(' + a.toFixed(3) + 'deg) translate(0,-105px) rotate(' + (-a).toFixed(3) + 'deg)">' + n + '</span>';
+  });
+  disc.innerHTML = labels;
+}
+
+function rouWon(ch, n){
+  if (ch === 'zero') return n === 0;
+  if (n === 0) return false;
+  if (ch === 'red')   return RED_NUMS.has(n);
+  if (ch === 'black') return !RED_NUMS.has(n);
+  if (ch === 'even')  return n % 2 === 0;
+  if (ch === 'odd')   return n % 2 === 1;
+  if (ch === 'low')   return n <= 18;
+  if (ch === 'high')  return n >= 19;
+  if (ch === 'dz1')   return n <= 12;
+  if (ch === 'dz2')   return n >= 13 && n <= 24;
+  if (ch === 'dz3')   return n >= 25;
+  return false;
+}
+
+function pushHist(n){
+  let h = [];
+  try { h = JSON.parse(localStorage.getItem('pb_rou_hist') || '[]'); } catch(e){}
+  h.unshift(n); h = h.slice(0, 10);
+  localStorage.setItem('pb_rou_hist', JSON.stringify(h));
+  const el = document.getElementById('rouHist');
+  el.innerHTML = h.map(x => '<b class="' + (x === 0 ? 'hzero' : RED_NUMS.has(x) ? 'hred' : 'hblack') + '">' + x + '</b>').join('');
+}
+
+let wheelDeg = 0, rouSpinning = false;
 function spinRoulette(){
+  if (rouSpinning) return;
+  const ch = picks.rou;
+  if (!ROU_MULT[ch]) { alert('Сначала выбери ставку: красное, чёт, дюжина или зеро 🙂'); return; }
   const bet = takeBet('rouBet'); if (!bet) return;
+  rouSpinning = true;
   const wheel = document.getElementById('wheel'), num = document.getElementById('wheelNum');
-  const slots = 8; // 4 red, 4 black on wheel + zero section handled separately
-  const result = Math.random();
-  const isZero = result < 0.0714;               // ~1/14
-  const isRed = !isZero && Math.random() < 0.5;
-  // wheel has 8 sectors of 45deg; we land the pointer (top) on target sector
-  const target = isZero ? 0 : isRed ? 0 : 45;  // sector start angle for display
-  wheelDeg += 360 * (5 + Math.random() * 3) + ((360 - target) % 360);
+  const btn = document.getElementById('rouBtn');
+  btn.disabled = true; btn.textContent = 'Крутится…';
+  const k = Math.floor(Math.random() * 37);          // индекс выпавшего сектора
+  const n = WHEEL_ORDER[k];                          // выпавший номер
+  const land = -(k * SECT + SECT / 2);               // центр сектора k — под указателем
+  const cur = ((wheelDeg % 360) + 360) % 360;
+  wheelDeg += 360 * (5 + Math.floor(Math.random() * 3)) + ((land - cur) % 360 + 360) % 360;
   wheel.style.transform = 'rotate(' + wheelDeg + 'deg)';
   num.textContent = '?';
   setTimeout(() => {
-    if (isZero) { num.textContent = '0'; num.style.color = '#34d399'; }
-    else { const n = 1 + Math.floor(Math.random() * 36); num.textContent = n; num.style.color = isRed ? '#ef4444' : '#e8e8f0'; }
-    const ch = picks.rou;
-    const won = (ch === 'zero' && isZero) || (ch === 'red' && isRed) || (ch === 'black' && !isRed && !isZero);
-    const mult = ch === 'zero' ? 14 : 2;
+    num.textContent = n;
+    pushHist(n);
+    const won = rouWon(ch, n);
+    const mult = ROU_MULT[ch];
+    const dropTxt = '<b>' + n + '</b> · ' + numColorName(n);
     if (won) {
       const prize = bet * mult;
-      changeBal(prize, 'Выигрыш в рулетке');
-      show('rouRes','win','🎉 ' + (isZero ? 'ЗЕРО!' : (isRed ? 'Красное ' : 'Чёрное ') + num.textContent) + '! +' + fmt(prize) + ' ₸');
+      changeBal(prize, 'Выигрыш в рулетке: ' + n + ' ' + numColorName(n) + ' (' + ROU_NAME[ch] + ')');
+      show('rouRes','win','🎉 Выпало ' + dropTxt + ' — ставка «' + ROU_NAME[ch] + '» зашла! +' + fmt(prize) + ' ₸ (x' + mult + ')');
     } else {
-      show('rouRes','lose','💀 ' + (isZero ? 'Зеро...' : (isRed ? 'Красное' : 'Чёрное') + ' ' + num.textContent) + '. Минус ' + fmt(bet) + ' ₸');
+      show('rouRes','lose','💀 Выпало ' + dropTxt + ' — ставка «' + ROU_NAME[ch] + '» не зашла. −' + fmt(bet) + ' ₸');
     }
-  }, 3500);
+    rouSpinning = false;
+    btn.disabled = false; btn.textContent = 'Крутить';
+  }, 4400);
 }
+buildWheel();
+(function(){ let h = []; try { h = JSON.parse(localStorage.getItem('pb_rou_hist') || '[]'); } catch(e){}
+  document.getElementById('rouHist').innerHTML =
+    h.map(x => '<b class="' + (x === 0 ? 'hzero' : RED_NUMS.has(x) ? 'hred' : 'hblack') + '">' + x + '</b>').join(''); })();
 
 // ===== SLOTS =====
 const SYM = ['🍒','⭐','💜','7️⃣','💎'];
