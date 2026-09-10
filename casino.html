@@ -105,18 +105,30 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
 
 footer{margin-top:44px;text-align:center;color:var(--text2);font-size:12px;line-height:1.8}
 footer a:hover{color:var(--p2)}
-/* poker */
-.poker-cards{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0}
-.pcard{width:54px;height:76px;border-radius:10px;background:#fff;color:#111;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;font-weight:800;font-size:19px;box-shadow:0 4px 14px rgba(0,0,0,.4);
-  cursor:default;transition:.15s;user-select:none}
-.pcard small{font-size:15px}
+/* poker & cards */
+.felt{background:radial-gradient(ellipse at 50% 25%,#166534,#052e16 78%);border:1px solid rgba(52,211,153,.28);
+  border-radius:18px;padding:16px 12px 14px;margin:16px 0;box-shadow:inset 0 0 36px rgba(0,0,0,.5)}
+.poker-cards{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;min-height:94px;margin:0 0 12px}
+.pcard{position:relative;width:64px;height:92px;border-radius:10px;
+  background:linear-gradient(160deg,#fff 62%,#edeae3);color:#111;display:flex;align-items:center;justify-content:center;
+  font-weight:800;box-shadow:0 7px 20px rgba(0,0,0,.5),inset 0 0 0 1px rgba(0,0,0,.05);
+  cursor:default;transition:transform .15s;user-select:none;animation:dealIn .38s cubic-bezier(.2,.8,.3,1) backwards}
+.pcard .corner{position:absolute;top:6px;left:7px;font-size:14px;line-height:1.05;display:flex;flex-direction:column;align-items:center}
+.pcard .corner small{font-size:13px;font-weight:700}
+.pcard .pip{font-size:31px;font-weight:600;opacity:.92}
 .pcard.red{color:#dc2626}
-.pcard.back{background:linear-gradient(135deg,var(--p),#4c1d95);color:rgba(255,255,255,.35);cursor:default}
+.pcard.back{background:linear-gradient(135deg,var(--p),#4c1d95);cursor:default;overflow:hidden}
+.pcard.back::before{content:'';position:absolute;inset:5px;border-radius:7px;border:2px solid rgba(255,255,255,.35);
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.13) 0 4px,transparent 4px 9px)}
+.pcard.back::after{content:'\1F0CF';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;opacity:.9}
 .pcard.sel{outline:3px solid var(--gold);transform:translateY(-10px);cursor:pointer}
 .pcard.pickable{cursor:pointer}
 .pcard.pickable:hover{transform:translateY(-5px)}
-.poker-label{font-size:11px;color:var(--text2);text-align:center;margin-bottom:4px}
+.pcard.flip{animation:flipIn .32s ease}
+@keyframes dealIn{from{transform:translateY(-42px) rotate(-7deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes flipIn{from{transform:rotateY(90deg) scale(.92)}to{transform:rotateY(0) scale(1)}}
+.poker-label{font-size:11px;color:#a7d7b8;text-align:center;margin-bottom:6px;letter-spacing:.3px}
+.poker-label b{color:var(--gold)}
 .poker-btns{display:flex;gap:8px;margin-top:4px}
 .poker-btns .btn{flex:1;justify-content:center;padding:10px 8px;font-size:13px}
 .no-acct{border-radius:20px;border:1px solid var(--gold);background:rgba(245,158,11,.08);padding:26px;text-align:center}
@@ -210,11 +222,13 @@ footer a:hover{color:var(--p2)}
     <!-- POKER -->
     <div class="tile" style="grid-column:1/-1">
       <h3>🃏 Покер <span style="font-size:12px;color:var(--text2)">пятикарточный дро · против дилера</span></h3>
-      <div class="poker-label" id="pokDealerLabel">Дилер</div>
-      <div class="poker-cards" id="dealerCards"></div>
-      <div class="poker-label" id="pokHandLabel">Твоя рука — кликни по картам, чтобы отдать в обмен (до 3)</div>
-      <div style="text-align:center;margin:0 0 4px"><b id="pokHandName" style="font-size:14px;color:var(--p2)"></b></div>
-      <div class="poker-cards" id="playerCards"></div>
+      <div class="felt">
+        <div class="poker-label" id="pokDealerLabel">Дилер</div>
+        <div class="poker-cards" id="dealerCards"></div>
+        <div class="poker-label" id="pokHandLabel">Твоя рука — кликни по картам, чтобы отдать в обмен (до 3)</div>
+        <div style="text-align:center;margin:0 0 6px"><b id="pokHandName" style="font-size:14px;color:var(--gold)"></b></div>
+        <div class="poker-cards" id="playerCards"></div>
+      </div>
       <div class="bet-row"><input type="number" id="pokBet" value="100" min="1"></div>
       <div class="quick">
         <button onclick="setBet('pokBet',100)">+100</button><button onclick="setBet('pokBet',500)">+500</button>
@@ -230,10 +244,12 @@ footer a:hover{color:var(--p2)}
     <!-- BLACKJACK -->
     <div class="tile" style="grid-column:1/-1">
       <h3>🂡 Блэкджек <span style="font-size:12px;color:var(--text2)">дилер добирает до 17 · блэкджек платит 3:2</span></h3>
-      <div class="poker-label" id="bjDealerLabel">Дилер</div>
-      <div class="poker-cards" id="bjDealerCards"></div>
-      <div class="poker-label" id="bjPlayerLabel">Твоя рука</div>
-      <div class="poker-cards" id="bjPlayerCards"></div>
+      <div class="felt">
+        <div class="poker-label" id="bjDealerLabel">Дилер</div>
+        <div class="poker-cards" id="bjDealerCards"></div>
+        <div class="poker-label" id="bjPlayerLabel">Твоя рука</div>
+        <div class="poker-cards" id="bjPlayerCards"></div>
+      </div>
       <div class="bet-row"><input type="number" id="bjBet" value="100" min="1"></div>
       <div class="quick">
         <button onclick="setBet('bjBet',100)">+100</button><button onclick="setBet('bjBet',500)">+500</button>
@@ -340,12 +356,15 @@ function pokNewDeck(){
   for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; }
   return d;
 }
-function cardHtml(c, hidden, pickable, sel){
-  if (hidden) return '<div class="pcard back">?</div>';
+function cardHtml(c, hidden, pickable, sel, delay, flip, noAnim){
+  if (noAnim) var style = ' style="animation:none"';
+  else if (delay) var style = ' style="animation-delay:' + delay + 'ms"';
+  else var style = '';
+  if (hidden) return '<div class="pcard back"' + style + '></div>';
   const red = (c.s === 1 || c.s === 3);
   const rank = RANKS[c.r - 2];
-  return `<div class="pcard ${red?'red':''} ${pickable?'pickable':''} ${sel?'sel':''}"
-    ${pickable?`onclick="pokToggle(${c.r},${c.s})"`:''}>${rank}<small>${SUITS[c.s]}</small></div>`;
+  return `<div class="pcard ${red?'red':''} ${pickable?'pickable':''} ${sel?'sel':''} ${flip?'flip':''}"
+    ${pickable?`onclick="pokToggle(${c.r},${c.s})"`:''} ${style}><span class="corner">${rank}<small>${SUITS[c.s]}</small></span><span class="pip">${SUITS[c.s]}</span></div>`;
 }
 function pokToggle(r, s){
   const key = r + '-' + s;
@@ -354,9 +373,11 @@ function pokToggle(r, s){
   else if (pokSel.size < 3) pokSel.add(key);
   pokRender();
 }
-function pokRender(revealDealer){
-  document.getElementById('dealerCards').innerHTML = pokDealer.map(c => cardHtml(c, !revealDealer, false, false)).join('');
-  document.getElementById('playerCards').innerHTML = pokPlayer.map(c => cardHtml(c, false, pokPhase === 'exchange', pokSel.has(c.r + '-' + c.s))).join('');
+function pokRender(revealDealer, fresh){
+  document.getElementById('dealerCards').innerHTML =
+    pokDealer.map((c, i) => cardHtml(c, !revealDealer, false, false, fresh ? 150 + i * 90 : 0, false, !fresh)).join('');
+  document.getElementById('playerCards').innerHTML =
+    pokPlayer.map((c, i) => cardHtml(c, false, pokPhase === 'exchange', pokSel.has(c.r + '-' + c.s), fresh ? i * 90 : 0, false, !fresh)).join('');
   // живое название руки игрока (и дилера на шоудауне)
   const pn = document.getElementById('pokHandName');
   const dl = document.getElementById('pokDealerLabel');
@@ -399,12 +420,13 @@ function cmpHands(a, b){
   return 0;
 }
 function pokMain(){
+  if (pokPhase === 'reveal') return;
   if (pokPhase === 'exchange') { pokExchange(pokSel.size); return; }
   const bet = takeBet('pokBet'); if (!bet) return;
   pokAnte = bet; pokDeck = pokNewDeck();
   pokPlayer = pokDeck.splice(0, 5); pokDealer = pokDeck.splice(0, 5);
   pokSel = new Set(); pokPhase = 'exchange';
-  pokRender(false);
+  pokRender(false, true);
   document.getElementById('pokMain').textContent = '🔄 Обменять выбранные';
   document.getElementById('pokSkip').style.display = 'inline-flex';
   show('pokRes','info','Обменяй до 3 карт (кликни по ним) или оставь как есть.');
@@ -423,23 +445,37 @@ function pokExchange(n){
     pokDealer = pokDealer.filter(c => !worst.includes(c));
     while (pokDealer.length < 5) pokDealer.push(pokDeck.pop());
   }
-  // шоудаун
-  pokPhase = 'idle'; pokSel = new Set();
-  pokRender(true);
-  const pe = evalHand(pokPlayer), dee = evalHand(pokDealer);
-  const cmp = cmpHands(pe, dee);
+  // шоудаун: карты дилера открываются по одной
+  pokSel = new Set(); pokPhase = 'reveal';
   document.getElementById('pokMain').textContent = '🃏 Сдать карты';
   document.getElementById('pokSkip').style.display = 'none';
-  if (cmp > 0) {
-    const prize = pokAnte * 2;
-    changeBal(prize, 'Выигрыш в покере: ' + pe.name);
-    show('pokRes','win',`🎉 Ты: <b>${pe.name}</b> · Дилер: ${dee.name}. Победа! +${fmt(prize)} ₸`);
-  } else if (cmp === 0) {
-    changeBal(pokAnte, 'Ничья в покере');
-    show('pokRes','info',`🤝 Оба: <b>${pe.name}</b>. Ставка возвращается.`);
-  } else {
-    show('pokRes','lose',`💀 Ты: ${pe.name} · Дилер: <b>${dee.name}</b>. Дилер забирает ${fmt(pokAnte)} ₸`);
-  }
+  document.getElementById('playerCards').innerHTML =
+    pokPlayer.map((c, i) => cardHtml(c, false, false, false, i * 80, false, false)).join('');
+  const pe = evalHand(pokPlayer);
+  document.getElementById('pokHandName').textContent = '🃏 У тебя: ' + pe.name;
+  let ri = 0;
+  const iv = setInterval(() => {
+    ri++;
+    document.getElementById('dealerCards').innerHTML =
+      pokDealer.map((c, idx) => cardHtml(c, idx >= ri, false, false, 0, idx === ri - 1, idx !== ri - 1)).join('');
+    if (ri >= 5) {
+      clearInterval(iv);
+      const dee = evalHand(pokDealer);
+      const cmp = cmpHands(pe, dee);
+      document.getElementById('pokDealerLabel').innerHTML = 'Дилер · <b>' + dee.name + '</b>';
+      pokPhase = 'idle';
+      if (cmp > 0) {
+        const prize = pokAnte * 2;
+        changeBal(prize, 'Выигрыш в покере: ' + pe.name);
+        show('pokRes','win',`🎉 Ты: <b>${pe.name}</b> · Дилер: ${dee.name}. Победа! +${fmt(prize)} ₸`);
+      } else if (cmp === 0) {
+        changeBal(pokAnte, 'Ничья в покере');
+        show('pokRes','info',`🤝 Оба: <b>${pe.name}</b>. Ставка возвращается.`);
+      } else {
+        show('pokRes','lose',`💀 Ты: ${pe.name} · Дилер: <b>${dee.name}</b>. Дилер забирает ${fmt(pokAnte)} ₸`);
+      }
+    }
+  }, 280);
 }
 
 // ===== BLACKJACK =====
@@ -450,10 +486,17 @@ function bjVal(hand){
   while (sum > 21 && aces > 0) { sum -= 10; aces--; }
   return sum;
 }
-function bjRender(hideDealer){
+let bjHoleShown = false;
+function bjRender(hideDealer, fresh, plain){
+  const doFlip = !plain && !hideDealer && !fresh && !bjHoleShown;
   document.getElementById('bjDealerCards').innerHTML =
-    bjDealer.map((c, i) => cardHtml(c, hideDealer && i === 1, false, false)).join('');
-  document.getElementById('bjPlayerCards').innerHTML = bjPlayer.map(c => cardHtml(c, false, false, false)).join('');
+    bjDealer.map((c, i) => cardHtml(c, hideDealer && i === 1, false, false, fresh ? 200 + i * 90 : 0,
+      doFlip && i === 1, (doFlip && i === 1) ? false
+      : (hideDealer && i === 1) ? (plain || !fresh)
+      : (plain || (!fresh && i !== bjDealer.length - 1)))).join('');
+  document.getElementById('bjPlayerCards').innerHTML =
+    bjPlayer.map((c, i) => cardHtml(c, false, false, false, fresh ? i * 90 : 0, false, plain || (!fresh && i !== bjPlayer.length - 1))).join('');
+  if (doFlip) bjHoleShown = true;
   document.getElementById('bjDealerLabel').textContent = 'Дилер' + (bjDealer.length ? ' · ' + (hideDealer ? bjVal([bjDealer[0]]) + ' + ?' : bjVal(bjDealer)) : '');
   document.getElementById('bjPlayerLabel').textContent = 'Твоя рука' + (bjPlayer.length ? ' · ' + bjVal(bjPlayer) : '');
 }
@@ -465,11 +508,11 @@ function bjButtons(play){
   document.getElementById('bjDouble').style.display = canDouble ? 'inline-flex' : 'none';
 }
 function bjMain(){
-  if (bjPhase === 'play') return;
+  if (bjPhase !== 'idle') return;
   const bet = takeBet('bjBet'); if (!bet) return;
   bjAnte = bet; bjDeck = pokNewDeck();
   bjPlayer = bjDeck.splice(0, 2); bjDealer = bjDeck.splice(0, 2);
-  bjPhase = 'play'; bjRender(true); bjButtons(true);
+  bjPhase = 'play'; bjHoleShown = false; bjRender(true, true); bjButtons(true);
   const pBJ = bjVal(bjPlayer) === 21, dBJ = bjVal(bjDealer) === 21;
   if (pBJ || dBJ) bjStand(true);
 }
@@ -491,23 +534,32 @@ function bjDouble(){
 }
 function bjStand(natural){
   if (bjPhase !== 'play') return;
-  while (bjVal(bjDealer) < 17) bjDealer.push(bjDeck.pop());
-  bjRender(false); bjButtons(false);
-  const p = bjVal(bjPlayer), d = bjVal(bjDealer);
-  const pBJ = natural && p === 21 && bjPlayer.length === 2;
-  const dBJ = natural && d === 21 && bjDealer.length === 2;
-  if (p > 21) bjFinish('bust');
-  else if (d > 21) bjFinish('win', 'Дилер перебор (' + d + ')');
-  else if (pBJ && !dBJ) bjFinish('bj');
-  else if (dBJ && !pBJ) bjFinish('lose', 'У дилера блэкджек 💀');
-  else if (pBJ && dBJ) bjFinish('push');
-  else if (p > d) bjFinish('win', p + ' против ' + d);
-  else if (p < d) bjFinish('lose');
-  else bjFinish('push');
+  bjPhase = 'dealer'; bjButtons(false);
+  bjRender(false); // скрытая карта дилера открывается флипом
+  const step = () => {
+    if (bjVal(bjDealer) < 17) {
+      bjDealer.push(bjDeck.pop());
+      bjRender(false);
+      setTimeout(step, 650);
+    } else {
+      const p = bjVal(bjPlayer), d = bjVal(bjDealer);
+      const pBJ = natural && p === 21 && bjPlayer.length === 2;
+      const dBJ = natural && d === 21 && bjDealer.length === 2;
+      if (p > 21) bjFinish('bust');
+      else if (d > 21) bjFinish('win', 'Дилер перебор (' + d + ')');
+      else if (pBJ && !dBJ) bjFinish('bj');
+      else if (dBJ && !pBJ) bjFinish('lose', 'У дилера блэкджек 💀');
+      else if (pBJ && dBJ) bjFinish('push');
+      else if (p > d) bjFinish('win', p + ' против ' + d);
+      else if (p < d) bjFinish('lose');
+      else bjFinish('push');
+    }
+  };
+  setTimeout(step, 700);
 }
 function bjFinish(outcome, why){
   bjPhase = 'idle';
-  bjRender(false);
+  bjRender(false, false, true);
   const p = bjVal(bjPlayer), d = bjVal(bjDealer);
   if (outcome === 'bj') {
     const prize = Math.floor(bjAnte * 2.5);
